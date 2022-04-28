@@ -1,4 +1,6 @@
 import os
+from typing import Tuple
+
 import pandas as pd
 from trader.data.data_provider import DataProvider
 

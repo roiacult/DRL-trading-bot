@@ -6,6 +6,7 @@ from abc import ABCMeta, abstractmethod
 class DataProvider(object, metaclass=ABCMeta):
     columns = ['Date', 'Open', 'High', 'Low', 'Close', 'Volume']
     in_columns = ['Date', 'Open', 'High', 'Low', 'Close', 'Volume']
+    date_col = columns[0]
 
     @abstractmethod
     def __init__(self, **kwargs):
@@ -20,13 +21,15 @@ class DataProvider(object, metaclass=ABCMeta):
             self.data_columns = dict(zip(self.columns, self.in_columns))
 
     def prepare_data(self, data_frame: pd.DataFrame, inplace: bool = True) -> pd.DataFrame:
-        column_map = self.data_columns
+        column_map = dict(zip(self.in_columns, self.columns))
 
         formatted = data_frame[self.in_columns]
         formatted = formatted.rename(index=str, columns=column_map)
 
         formatted = self._format_data(formatted, inplace=inplace)
         formatted = self._sort_data(formatted, inplace=inplace)
+
+        # formatted = formatted.set_index(self.in_columns[0], inplace=inplace)
 
         return formatted
 
@@ -46,9 +49,7 @@ class DataProvider(object, metaclass=ABCMeta):
         else:
             formatted = data_frame.copy()
 
-        date_col = self.data_columns['Date']
-
-        formatted[date_col] = pd.to_datetime(formatted[date_col])
+        formatted[self.date_col] = pd.to_datetime(formatted[self.date_col])
         return formatted
 
     @abstractmethod
