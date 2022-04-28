@@ -13,7 +13,8 @@ class IncrementalProfitReward(BaseReward):
         pass
 
     def reset(self):
-        pass
+        self.last_sold = 0
+        self.last_bought = 0
 
     def get_reward(self, current_step: int, current_price: Callable[[str], float], observations: pd.DataFrame,
                    account_history: pd.DataFrame, net_worths: List[float]) -> float:
