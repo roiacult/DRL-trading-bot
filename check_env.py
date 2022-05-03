@@ -21,4 +21,4 @@ while not done:
     obs, reward, done, info = env.step(action)
     env.render()
 
-# check_env(env)
+check_env(env)

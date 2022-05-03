@@ -36,6 +36,7 @@ parser.add_argument('-r', '--reward', required=False, choices=REWARD_TYPES, defa
 parser.add_argument('-id', '--id', required=True, help="Trained model id")
 parser.add_argument('-m', '--model-dir', required=False, default=MODEL_DIR, help="Models directory")
 parser.add_argument('-n', '--number', required=True, help='Number of model to test')
+parser.add_argument('-d', '--days', required=False, default=90, help='Number of days to test on')
 
 parser.add_argument('-s', '--save-dir', required=False, default=SAVE_DIR, help="Saving result directory")
 parser.add_argument('-data', '--data', required=False, default=DATA_PATH, help="Dataset csv file path")
@@ -88,7 +89,9 @@ def test(args):
 
     obs = env.reset()
     info_list = None
-    for i in range(90):
+
+    days = min(int(args.days), len(data_provider.all_timesteps())-env.window_size)
+    for i in range(days):
         action, _states = model.predict(obs)
         obs, rewards, done, info = env.step(action)
         if info_list is None:

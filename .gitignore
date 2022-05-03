@@ -132,3 +132,4 @@ dmypy.json
 
 models/
 logs/
+ignore.py

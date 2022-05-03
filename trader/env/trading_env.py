@@ -34,6 +34,7 @@ class TradingEnv(gym.Env):
             data_provider: DataProvider,
             reward_strategy: Type[BaseReward] = IncrementalProfitReward,
             trade_strategy: Type[BaseStrategy] = SimulatedStrategy,
+            window_size: int = 10,
             initial_balance: int = 10000,
             commissionPercent: float = 0.25,
             maxSlippagePercent: float = 2.0,
@@ -51,6 +52,7 @@ class TradingEnv(gym.Env):
         self.initial_balance = round(initial_balance, self.base_precision)
         self.commissionPercent = commissionPercent
         self.maxSlippagePercent = maxSlippagePercent
+        self.window_size = window_size
 
         self.data_provider = data_provider
         self.reward_strategy = reward_strategy()
@@ -72,7 +74,7 @@ class TradingEnv(gym.Env):
         self.n_discrete_actions: int = kwargs.get('n_discrete_actions', 24)
         self.action_space = gym.spaces.Discrete(self.n_discrete_actions)
 
-        self.n_features = 6 + len(self.data_provider.columns)-1
+        self.n_features = 6 + (len(self.data_provider.columns)-1)*self.window_size
         self.obs_shape = (1, self.n_features)
         self.observation_space = gym.spaces.Box(low=0, high=1, shape=self.obs_shape, dtype=np.float16)
 
@@ -89,7 +91,13 @@ class TradingEnv(gym.Env):
         self.net_worths: List[float] = [self.initial_balance]
         self.timestamps = []
         self.asset_held = 0
-        self.current_step = 0
+        self.current_step = self.window_size
+
+        for i in range(self.window_size):
+            self.current_timestep = self.data_provider.next_timestep()
+            self.timestamps.append(pd.to_datetime(self.current_timestep[self.data_provider.date_col].item(), unit='s'))
+            self.observations = self.observations.append(self.current_timestep, ignore_index=True)
+            self.net_worths.append(self.initial_balance)
 
         self.account_history = pd.DataFrame([{
             'balance': self.balance,
@@ -126,7 +134,7 @@ class TradingEnv(gym.Env):
             observations = max_min_normalize_mapper(observations, columns=columns)
             scaled_history = max_min_normalize_mapper(scaled_history, inplace=False)
 
-        obs = observations[columns].values[-1]
+        obs = observations[columns].values[-self.window_size:].flatten()
         obs = np.insert(obs, len(obs), scaled_history.values[-1], axis=0)
 
         obs = np.reshape(obs.astype('float16'), self.obs_shape)
