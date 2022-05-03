@@ -7,6 +7,7 @@ from stable_baselines3 import PPO, A2C, DQN
 
 from trader.data.simulated_data_provider import SimulatedDataProvider
 from trader.env.reward.incremental_profit_reward import IncrementalProfitReward
+from trader.env.reward.risk_ratio_reward import RiskRatioReward
 from trader.env.reward.weighted_unrealized_pnl_reward import WeightedUnrealizedPnlReward
 from trader.env.strategy.simulated_strategy import SimulatedStrategy
 from trader.env.trading_env import TradingEnv
@@ -16,7 +17,7 @@ TIME_TO_SAVE = 10000
 ALGO_LIST = ['PPO', 'DQN', 'A2C']
 LOGS_DIR = 'logs'
 SAVE_DIR = 'models'
-REWARD_TYPES = ['incremental', 'weighted_unrealized_pnl', 'sharp_ratio']
+REWARD_TYPES = ['incremental', 'weighted_unrealized_pnl', 'sharp', 'sortino', 'calmar']
 DATA_PATH = 'dataset/Binance_BTCUSDT_d.csv'
 
 parser = argparse.ArgumentParser(description="Train a Crypto Currency trading reinforcement learning agent")
@@ -39,13 +40,23 @@ def train(args):
     # selecting reward function
     if args.reward == 'incremental':
         Reward = IncrementalProfitReward
+        reward_kwargs = {}
     elif args.reward == 'weighted_unrealized_pnl':
         Reward = WeightedUnrealizedPnlReward
-    elif args.reward == 'sharp_ratio':
-        raise Exception('sharp ration reward function not implemented yet')
+        reward_kwargs = {}
+    elif args.reward == 'sharp':
+        Reward = RiskRatioReward
+        reward_kwargs = dict(ratio='sharp')
+    elif args.reward == 'sortino':
+        Reward = RiskRatioReward
+        reward_kwargs = dict(ratio='sortino')
+    elif args.reward == 'calmar':
+        Reward = RiskRatioReward
+        reward_kwargs = dict(ratio='calmar')
     else:
         # default reward function
         Reward = IncrementalProfitReward
+        reward_kwargs = {}
 
     env = TradingEnv(
         data_provider=data_provider,
@@ -53,6 +64,7 @@ def train(args):
         trade_strategy=SimulatedStrategy,
         initial_balance=10000,
         commissionPercent=0.3,
+        reward_kwargs=reward_kwargs
     )
 
     # selecting training algorithm

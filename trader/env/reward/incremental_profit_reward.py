@@ -9,7 +9,7 @@ class IncrementalProfitReward(BaseReward):
     last_bought: int = 0
     last_sold: int = 0
 
-    def __init__(self):
+    def __init__(self, **kwargs):
         pass
 
     def reset(self):

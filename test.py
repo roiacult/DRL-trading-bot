@@ -10,6 +10,7 @@ import numpy as np
 
 from trader.data.simulated_data_provider import SimulatedDataProvider
 from trader.env.reward.incremental_profit_reward import IncrementalProfitReward
+from trader.env.reward.risk_ratio_reward import RiskRatioReward
 from trader.env.reward.weighted_unrealized_pnl_reward import WeightedUnrealizedPnlReward
 from trader.env.strategy.simulated_strategy import SimulatedStrategy
 from trader.env.trading_env import TradingEnv
@@ -19,7 +20,7 @@ ALGO_LIST = ['PPO', 'DQN', 'A2C']
 MODEL_DIR = 'models'
 SAVE_DIR = 'results'
 # INDEXES = ['net_worth', 'profit', 'shares_held']
-REWARD_TYPES = ['incremental', 'weighted_unrealized_pnl', 'sharp_ratio']
+REWARD_TYPES = ['incremental', 'weighted_unrealized_pnl', 'sharp', 'sortino', 'calmar']
 DATA_PATH = 'dataset/Binance_BTCUSDT_d.csv'
 INDEXES = ['timestamps', 'net_worths', 'current_price', 'assets_held']
 
@@ -49,13 +50,23 @@ def test(args):
     # selecting reward function
     if args.reward == 'incremental':
         Reward = IncrementalProfitReward
+        reward_kwargs = {}
     elif args.reward == 'weighted_unrealized_pnl':
         Reward = WeightedUnrealizedPnlReward
-    elif args.reward == 'sharp_ratio':
-        raise Exception('sharp ration reward function not implemented yet')
+        reward_kwargs = {}
+    elif args.reward == 'sharp':
+        Reward = RiskRatioReward
+        reward_kwargs = dict(ratio='sharp')
+    elif args.reward == 'sortino':
+        Reward = RiskRatioReward
+        reward_kwargs = dict(ratio='sortino')
+    elif args.reward == 'calmar':
+        Reward = RiskRatioReward
+        reward_kwargs = dict(ratio='calmar')
     else:
         # default reward function
         Reward = IncrementalProfitReward
+        reward_kwargs = {}
 
     env = TradingEnv(
         data_provider=data_provider,
@@ -63,6 +74,7 @@ def test(args):
         trade_strategy=SimulatedStrategy,
         initial_balance=10000,
         commissionPercent=0.3,
+        reward_kwargs=reward_kwargs
     )
 
     # selecting training algorithm
@@ -90,7 +102,7 @@ def test(args):
     obs = env.reset()
     info_list = None
 
-    days = min(int(args.days), len(data_provider.all_timesteps())-env.window_size)
+    days = min(int(args.days), len(data_provider.all_timesteps()) - env.window_size)
     for i in range(days):
         action, _states = model.predict(obs)
         obs, rewards, done, info = env.step(action)

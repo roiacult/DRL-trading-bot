@@ -38,7 +38,7 @@ class TradingEnv(gym.Env):
             initial_balance: int = 10000,
             commissionPercent: float = 0.25,
             maxSlippagePercent: float = 2.0,
-            **kwargs
+            **kwargs,
     ):
         super(TradingEnv, self).__init__()
 
@@ -55,7 +55,8 @@ class TradingEnv(gym.Env):
         self.window_size = window_size
 
         self.data_provider = data_provider
-        self.reward_strategy = reward_strategy()
+        reward_kwargs = kwargs.get('reward_kwargs', {})
+        self.reward_strategy = reward_strategy(**reward_kwargs)
         self.trade_strategy = trade_strategy(
             commissionPercent=self.commissionPercent,
             maxSlippagePercent=self.maxSlippagePercent,

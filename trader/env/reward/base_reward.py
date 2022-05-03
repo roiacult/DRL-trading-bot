@@ -6,7 +6,7 @@ from typing import List, Callable
 
 class BaseReward(object, metaclass=ABCMeta):
     @abstractmethod
-    def __init__(self):
+    def __init__(self, **kwargs):
         pass
 
     @abstractmethod
