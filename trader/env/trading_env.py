@@ -64,10 +64,10 @@ class TradingEnv(gym.Env):
         )
 
         self.render_benchmarks: List[Dict] = kwargs.get('render_benchmarks', [])
-        self.normalize_obs: bool = kwargs.get('normalize_obs', True)
-        self.stationarize_obs: bool = kwargs.get('stationarize_obs', True)
+        self.normalize_obs: bool = kwargs.get('normalize_obs', False)
+        self.stationarize_obs: bool = kwargs.get('stationarize_obs', False)
         self.normalize_rewards: bool = kwargs.get('normalize_rewards', False)
-        self.stationarize_rewards: bool = kwargs.get('stationarize_rewards', True)
+        self.stationarize_rewards: bool = kwargs.get('stationarize_rewards', False)
 
         self.n_discrete_actions: int = kwargs.get('n_discrete_actions', 24)
         self.action_space = gym.spaces.Discrete(self.n_discrete_actions)
@@ -143,7 +143,12 @@ class TradingEnv(gym.Env):
         reward = self._reward()
         done = self._done()
 
-        return obs, reward, done, {'net_worths': self.net_worths, 'timestamps': self.timestamps}
+        return obs, reward, done, {
+            'timestamps': self.timestamps,
+            'net_worths': self.net_worths,
+            'current_price': self._current_price(),
+            'asset_held': self.asset_held,
+        }
 
     def _take_action(self, action: int):
         amount_asset_to_buy, amount_asset_to_sell = self._get_trade(action)

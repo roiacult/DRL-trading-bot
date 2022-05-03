@@ -20,7 +20,7 @@ class TradingGraph:
         self.df = df
 
         # Create a figure on screen and set the title
-        self.fig = plt.figure()
+        self.fig = plt.figure(figsize=(16, 10), dpi=80)
 
         # Create top subplot for net worth axis
         self.net_worth_ax = plt.subplot2grid((6, 1), (0, 0), rowspan=2, colspan=1)
