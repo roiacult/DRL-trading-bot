@@ -45,7 +45,10 @@ def create_arg_parser():
 
 
 def create_env(args, train=True, initial_balance=10000, commissionPercent=0.3):
-    train_provider, test_provider = SimulatedDataProvider(csv_data_path=args.data).split_data()
+    train_provider, test_provider = SimulatedDataProvider(
+        csv_data_path=args.data,
+        add_indicators=args.add_indicators,
+    ).split_data()
 
     # selecting reward function
     if args.reward == 'incremental':

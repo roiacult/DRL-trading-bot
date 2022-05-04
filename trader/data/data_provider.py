@@ -2,15 +2,37 @@ import pandas as pd
 from typing import Dict, Tuple
 from abc import ABCMeta, abstractmethod
 
+import ta
+
 
 class DataProvider(object, metaclass=ABCMeta):
     columns = ['Date', 'Open', 'High', 'Low', 'Close', 'Volume']
     in_columns = ['Date', 'Open', 'High', 'Low', 'Close', 'Volume']
     date_col = columns[0]
+    indicators_columns = [
+        # momentum indicators
+        'momentum_rsi', 'momentum_tsi', 'momentum_uo', 'momentum_ao',
+
+        # volume indicators
+        'volume_mfi',  'volume_adi', 'volume_obv', 'volume_cmf', 'volume_fi', 'volume_em', 'volume_vpt', 'volume_nvi',
+
+        # trend indicators
+        'trend_macd', 'trend_vortex_ind_pos', 'trend_vortex_ind_neg', 'trend_vortex_ind_diff', 'trend_trix',
+        'trend_mass_index', 'trend_cci', 'trend_dpo', 'trend_kst', 'trend_kst_sig', 'trend_kst_diff', 'trend_aroon_up',
+        'trend_aroon_down', 'trend_aroon_ind',
+
+        # volatility indicators
+        'volatility_bbh', 'volatility_bbhi', 'volatility_bbli', 'volatility_bbm', 'volatility_bbl', 'volatility_kchi',
+        'volatility_kcli',
+
+        # other indicators
+        'others_dr', 'others_dlr'
+    ]
 
     @abstractmethod
-    def __init__(self, **kwargs):
+    def __init__(self, add_indicators: bool = False, **kwargs):
 
+        self.add_indicators = add_indicators
         data_columns: Dict[str, str] = kwargs.get('data_columns', None)
 
         if data_columns is not None:
@@ -26,12 +48,21 @@ class DataProvider(object, metaclass=ABCMeta):
         formatted = data_frame[self.in_columns]
         formatted = formatted.rename(index=str, columns=column_map)
 
+        if self.add_indicators:
+            formatted = self._add_indicators(formatted)
+
         formatted = self._format_data(formatted, inplace=inplace)
         formatted = self._sort_data(formatted, inplace=inplace)
 
         # formatted = formatted.set_index(self.in_columns[0], inplace=inplace)
 
         return formatted
+
+    def _add_indicators(self, df):
+        df = ta.add_all_ta_features(df, open='Open', close='Close', high='High', low='Low', volume='Volume')
+        all_columns = self.columns.copy()
+        all_columns.extend(self.indicators_columns)
+        return df[all_columns]
 
     def _sort_data(self, data_frame: pd.DataFrame, inplace: bool = True) -> pd.DataFrame:
         if inplace is True:
@@ -49,8 +80,15 @@ class DataProvider(object, metaclass=ABCMeta):
         else:
             formatted = data_frame.copy()
 
+        formatted = formatted.dropna()
+        formatted.reset_index(drop=True)
         formatted[self.date_col] = pd.to_datetime(formatted[self.date_col])
         return formatted
+
+    def all_columns(self):
+        all_cols = self.columns.copy()
+        all_cols.extend(self.indicators_columns)
+        return all_cols
 
     @abstractmethod
     def reset(self):

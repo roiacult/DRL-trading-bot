@@ -77,9 +77,9 @@ class TradingEnv(gym.Env):
         self.n_discrete_actions: int = kwargs.get('n_discrete_actions', 24)
         self.action_space = gym.spaces.Discrete(self.n_discrete_actions)
 
-        self.n_features = 6 + (len(self.data_provider.columns) - 1) * self.window_size
+        self.n_features = 6 + (len(self.data_provider.all_columns()) - 1) * self.window_size
         self.obs_shape = (1, self.n_features)
-        self.observation_space = gym.spaces.Box(low=0, high=1, shape=self.obs_shape, dtype=np.float16)
+        self.observation_space = gym.spaces.Box(low=-np.inf, high=np.inf, shape=self.obs_shape, dtype=np.float16)
 
         self.observations = pd.DataFrame(None, columns=self.data_provider.columns)
 
@@ -123,7 +123,7 @@ class TradingEnv(gym.Env):
         self.timestamps.append(pd.to_datetime(self.current_timestep[self.data_provider.date_col].item(), unit='s'))
         self.observations = self.observations.append(self.current_timestep, ignore_index=True)
 
-        columns = self.data_provider.columns.copy()
+        columns = self.data_provider.all_columns()
         columns.remove(self.data_provider.date_col)
 
         if self.stationarize_obs:

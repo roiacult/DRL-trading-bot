@@ -29,7 +29,7 @@ def train(args):
         ALGO = PPO
 
     model = ALGO('MlpPolicy', env, verbose=1, tensorboard_log=args.logs)
-    current_id = f'BTCUSDT-{args.algo}-{args.reward}'
+    current_id = f'BTCUSDT-{args.algo}-{args.reward}-{"ind" if args.add_indicators else ""}'
     log_dir = os.path.join(args.logs, current_id)
     save_dir = os.path.join(args.save, f'{current_id}_{get_latest_run_id(log_dir) + 1}')
 
