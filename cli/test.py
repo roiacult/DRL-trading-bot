@@ -11,6 +11,7 @@ def create_test_arg_parser():
     parser.add_argument('-t', '--type', required=False, default=TEST_TYPE[0], choices=TEST_TYPE,
                         help='Dataset to test the agent on')
     parser.add_argument('--render', action='store_true')
+    parser.add_argument('--show-figures', action='store_true')
 
     parser.add_argument('-id', '--id', required=True, help="Trained model id")
     parser.add_argument('-m', '--model-dir', required=False, default=MODEL_DIR, help="Models directory")
@@ -27,9 +28,7 @@ def create_test_arg_parser():
     return parser
 
 
-def test(args, number):
-    env = create_env(args, train=args.type == 'train')
-
+def test(args, number, env):
     # selecting training algorithm
     if args.algo == 'PPO':
         ALGO = PPO
@@ -77,18 +76,19 @@ def test(args, number):
 
     plot_testing_results(
         info_list, save_to=saving_dir,
-        title=f"BTC-USDT {args.algo} {args.reward} ({number if number else 'random'})"
+        title=f"BTC-USDT {args.algo} {args.reward} ({number if number else 'random'})",
+        show_figure=args.show_figures
     )
 
 
 def run_tester():
     parser = create_test_arg_parser()
     args = parser.parse_args()
+    env = create_env(args, train=args.type == 'train')
     if args.random:
-        test(args, None)
+        test(args, None, env)
     elif args.numbers:
         for n in args.numbers:
-            test(args, n)
+            test(args, n, env)
     else:
-        test(args, args.number)
-
+        test(args, args.number, env)

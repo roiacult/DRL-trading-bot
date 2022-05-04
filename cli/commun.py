@@ -88,7 +88,7 @@ def get_latest_run_id(log_path: str = "") -> int:
     return max_run_id
 
 
-def plot_testing_results(info, save_to=None, title='Testing trading rl agent'):
+def plot_testing_results(info, save_to=None, title='Testing trading rl agent', show_figure=False):
     fig, axs = plt.subplots(ncols=1, nrows=len(INDEXES) - 1, figsize=(10, 8), constrained_layout=True)
     fig.suptitle(title)
     for i in range(len(INDEXES) - 1):
@@ -98,4 +98,5 @@ def plot_testing_results(info, save_to=None, title='Testing trading rl agent'):
         legend.get_frame().set_alpha(0.4)
     if save_to:
         plt.savefig(save_to)
-    plt.show()
+    if show_figure:
+        plt.show()
