@@ -1,7 +1,7 @@
 import ray
 from ray.tune import register_env
 
-from cli.ray_optimizer import RayOptimizer
+from cli.ray.ray_optimizer import RayOptimizer
 from cli.commun import *
 
 

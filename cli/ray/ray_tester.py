@@ -1,9 +1,8 @@
 import ray
-import ray.rllib.agents.ppo as ppo
 from ray.tune import register_env
 
 from cli.commun import *
-from cli.ray_optimizer import RayOptimizer
+from cli.ray.ray_optimizer import RayOptimizer
 
 
 def create_ray_test_arg_parser():

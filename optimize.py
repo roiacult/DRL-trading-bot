@@ -2,10 +2,10 @@
 import sys
 
 from cli.commun import OPTIONS
-from cli.ray_tester import run_ray_tester
-from cli.ray_training import run_ray_trainer
-from cli.test import run_tester
-from cli.train import run_trainer
+from cli.ray.ray_tester import run_ray_tester
+from cli.ray.ray_training import run_ray_trainer
+from cli.stable_baseine.test import run_tester
+from cli.stable_baseine.train import run_trainer
 
 
 if __name__ == '__main__':
