@@ -16,7 +16,15 @@ def create_train_arg_parser():
 
 
 def train(args):
-    env = create_env(args, train=True)
+    # env = create_env(args, train=True)
+    env = create_env({
+        'data': args.data,
+        'add_indicators': args.add_indicators,
+        'reward': args.reward,
+        'train': True,
+        'initial_balance': 10000,
+        'commission_percent': 0.3
+    })
 
     # selecting training algorithm
     if args.algo == 'PPO':

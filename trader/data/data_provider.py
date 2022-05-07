@@ -81,7 +81,7 @@ class DataProvider(object, metaclass=ABCMeta):
             formatted = data_frame.copy()
 
         formatted = formatted.dropna()
-        formatted.reset_index(drop=True)
+        formatted = formatted.reset_index(drop=True)
         formatted[self.date_col] = pd.to_datetime(formatted[self.date_col])
         return formatted
 

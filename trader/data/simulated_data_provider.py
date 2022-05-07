@@ -50,10 +50,10 @@ class SimulatedDataProvider(DataProvider):
         return self.timestep_index < len(self.data_frame)
 
     def next_timestep(self) -> pd.DataFrame:
-        columns = self.all_columns()
-        frame = self.data_frame[columns].values[self.timestep_index]
-        frame = pd.DataFrame([frame], columns=columns)
-
+        # columns = self.all_columns()
+        # frame = self.data_frame[columns].values[self.timestep_index]
+        # frame = pd.DataFrame([frame], columns=columns)
+        frame = self.data_frame.iloc[[self.timestep_index]].reset_index(drop=True)
         self.timestep_index += 1
 
         return frame

@@ -19,20 +19,23 @@ SAVE_DIR = os.path.join(path, 'models')
 DATA_PATH = os.path.join(path, 'dataset', 'Binance_BTCUSDT_d.csv')
 MODEL_DIR = os.path.join(path, 'models')
 SAVE_RESULTS_DIR = os.path.join(path, 'results')
+RAY_RESULTS = os.path.join(path, 'ray_results')
 
 TIME_STEPS = 1000000
 TIME_TO_SAVE = 10000
+TEST_STEPS = 90
 
 INDEXES = ['timestamps', 'net_worths', 'current_price', 'assets_held']
 REWARD_TYPES = ['incremental', 'weighted_unrealized_pnl', 'sharp', 'sortino', 'calmar']
 TEST_TYPE = ['test', 'train']
 ALGO_LIST = ['PPO', 'DQN', 'A2C']
+OPTIONS = ['train', 'test', 'ray_train', 'ray_test']
 
 
 def create_arg_parser():
     parser = argparse.ArgumentParser(description="Train/Test Crypto currency trading agent")
 
-    parser.add_argument('process', choices=['train', 'test'])
+    parser.add_argument('process', choices=OPTIONS)
 
     parser.add_argument('-a', '--algo', required=False, choices=ALGO_LIST, default=ALGO_LIST[0],
                         help=f"Algorithm used to train the agent choices {ALGO_LIST}")
@@ -44,26 +47,26 @@ def create_arg_parser():
     return parser
 
 
-def create_env(args, train=True, initial_balance=10000, commissionPercent=0.3):
+def create_env(config):
     train_provider, test_provider = SimulatedDataProvider(
-        csv_data_path=args.data,
-        add_indicators=args.add_indicators,
+        csv_data_path=config.get('data', None),
+        add_indicators=config.get('add_indicators', False),
     ).split_data()
 
     # selecting reward function
-    if args.reward == 'incremental':
+    if config.get('reward', None) == 'incremental':
         Reward = IncrementalProfitReward
         reward_kwargs = {}
-    elif args.reward == 'weighted_unrealized_pnl':
+    elif config.get('reward', None) == 'weighted_unrealized_pnl':
         Reward = WeightedUnrealizedPnlReward
         reward_kwargs = {}
-    elif args.reward == 'sharp':
+    elif config.get('reward', None) == 'sharp':
         Reward = RiskRatioReward
         reward_kwargs = dict(ratio='sharp')
-    elif args.reward == 'sortino':
+    elif config.get('reward', None) == 'sortino':
         Reward = RiskRatioReward
         reward_kwargs = dict(ratio='sortino')
-    elif args.reward == 'calmar':
+    elif config.get('reward', None) == 'calmar':
         Reward = RiskRatioReward
         reward_kwargs = dict(ratio='calmar')
     else:
@@ -72,11 +75,12 @@ def create_env(args, train=True, initial_balance=10000, commissionPercent=0.3):
         reward_kwargs = {}
 
     return TradingEnv(
-        data_provider=train_provider if train else test_provider,
+        data_provider=train_provider if config.get('train', False) else test_provider,
         reward_strategy=Reward,
         trade_strategy=SimulatedStrategy,
-        initial_balance=initial_balance,
-        commissionPercent=commissionPercent,
+        initial_balance=config.get('initial_balance', 0),
+        commissionPercent=config.get('commission_percent', 0),
+        maxSlippagePercent=0.,
         reward_kwargs=reward_kwargs
     )
 
@@ -103,3 +107,10 @@ def plot_testing_results(info, save_to=None, title='Testing trading rl agent', s
         plt.savefig(save_to)
     if show_figure:
         plt.show()
+
+
+def fix_data_path(args):
+    if not args.data:
+        args.data = DATA_PATH
+    elif not args.data.startswith('/'):
+        args.data = os.path.join(path, args.data)

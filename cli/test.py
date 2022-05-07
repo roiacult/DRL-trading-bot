@@ -21,7 +21,7 @@ def create_test_arg_parser():
     group.add_argument('-ns', '--numbers', nargs="+", help='Number of model to test')
     group.add_argument('--random', action='store_true')
 
-    parser.add_argument('-d', '--days', required=False, default=90, help='Number of days to test on')
+    parser.add_argument('-d', '--days', required=False, default=TEST_STEPS, help='Number of days to test on')
 
     parser.add_argument('-s', '--save-dir', required=False, default=SAVE_RESULTS_DIR, help="Saving result directory")
 
@@ -84,7 +84,15 @@ def test(args, number, env):
 def run_tester():
     parser = create_test_arg_parser()
     args = parser.parse_args()
-    env = create_env(args, train=args.type == 'train')
+    # env = create_env(args, train=args.type == 'train')
+    env = create_env({
+        'data': args.data,
+        'add_indicators': args.add_indicators,
+        'reward': args.reward,
+        'train': args.type == 'train',
+        'initial_balance': 10000,
+        'commission_percent': 0.3
+    })
     if args.random:
         test(args, None, env)
     elif args.numbers:

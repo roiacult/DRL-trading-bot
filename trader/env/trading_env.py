@@ -78,7 +78,7 @@ class TradingEnv(gym.Env):
         self.action_space = gym.spaces.Discrete(self.n_discrete_actions)
 
         self.n_features = 6 + (len(self.data_provider.all_columns()) - 1) * self.window_size
-        self.obs_shape = (1, self.n_features)
+        self.obs_shape = (self.n_features,)
         self.observation_space = gym.spaces.Box(low=-np.inf, high=np.inf, shape=self.obs_shape, dtype=np.float16)
 
         self.observations = pd.DataFrame(None, columns=self.data_provider.columns)
@@ -95,6 +95,7 @@ class TradingEnv(gym.Env):
         self.timestamps = []
         self.asset_held = 0
         self.current_step = self.window_size
+        self.observations = pd.DataFrame(None, columns=self.data_provider.columns)
 
         for i in range(self.window_size):
             self.current_timestep = self.data_provider.next_timestep()
