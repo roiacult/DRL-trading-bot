@@ -87,7 +87,8 @@ class DataProvider(object, metaclass=ABCMeta):
 
     def all_columns(self):
         all_cols = self.columns.copy()
-        all_cols.extend(self.indicators_columns)
+        if self.add_indicators:
+            all_cols.extend(self.indicators_columns)
         return all_cols
 
     @abstractmethod

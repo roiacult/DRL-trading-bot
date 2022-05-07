@@ -50,9 +50,11 @@ check_env(env)
 # exec time avg: 0.004067301273345947
 
 
+# num_workers => 10 ---------------------------
+# Total run time: 327.58 seconds (324.63 seconds for the tuning loop). without gpu
+# Total run time: 343.84 seconds (342.20 seconds for the tuning loop). with gpu
 
-
-
-
-
+# num_workers => 5 ---------------------------
+# Total run time: 327.58 seconds (324.63 seconds for the tuning loop). without gpu
+# Total run time: 343.84 seconds (342.20 seconds for the tuning loop). with gpu
 

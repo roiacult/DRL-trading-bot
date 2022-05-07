@@ -13,6 +13,7 @@ def create_ray_test_arg_parser():
     parser.add_argument('-st', '--steps', required=False, default=TEST_STEPS, help='Number of steps to test on')
     parser.add_argument('--show-figures', action='store_true')
     parser.add_argument('--render', action='store_true')
+    parser.add_argument('-lstm', action='store_true')
 
     group = parser.add_mutually_exclusive_group(required=False)
     group.add_argument('-n', '--number', help='Number of checkpoint')
@@ -35,7 +36,7 @@ def ray_test(args, number, optimizer):
 
     plot_testing_results(
         info, save_to=os.path.join(result_dir, f'test-{number}.png'),
-        title=f"BTC-USDT {args.algo} {args.reward} ({number if number else 'random'})",
+        title=f"BTC-USDT {args.algo} {args.reward} {'-lstm' if args.lstm else ''} ({number if number else 'random'}) ",
         show_figure=args.show_figures
     )
 
@@ -49,7 +50,7 @@ def run_ray_tester():
 
     register_env("TradingEnv", create_env)
 
-    optimizer = RayOptimizer(args.data, args.algo, args.reward, args.add_indicators)
+    optimizer = RayOptimizer(args.data, args.algo, args.reward, args.add_indicators, args.lstm)
 
     if args.random:
         ray_test(args, None, optimizer)

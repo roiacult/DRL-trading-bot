@@ -3,8 +3,10 @@ from ray import tune
 from ray.rllib.agents import Trainer
 from ray.rllib.utils.typing import TrainerConfigDict
 import ray.rllib.agents.ppo as ppo
+from ray.tune.trial import Trial
 
 from cli.commun import *
+
 
 # Let's define some tuning parameters
 # FC_SIZE = tune.grid_search([[256, 256], [1024], [128, 64, 32]])  # Those are the alternatives that ray.tune will try
@@ -17,9 +19,10 @@ from cli.commun import *
 
 class RayOptimizer:
 
-    def __init__(self, data: str, algo: str, reward='sharp', add_indicators=False):
+    def __init__(self, data: str, algo: str, reward='sharp', add_indicators=False, use_lstm=False):
         self.algo = algo
         self.reward = reward
+        self.use_lstm = use_lstm
         self.env_train_config = {
             'data': data,
             'add_indicators': add_indicators,
@@ -29,13 +32,12 @@ class RayOptimizer:
             'commission_percent': 0.3
         }
 
-        self.env_test_config = {
-            'data': data,
-            'add_indicators': add_indicators,
-            'reward': reward,
-            'train': False,
-            'initial_balance': 10000,
-            'commission_percent': 0.3
+        self.env_test_config = self.env_train_config.copy()
+        self.env_test_config['train'] = False
+        self.model_conf = {
+            # "fcnet_hiddens": FC_SIZE,  # Hyperparameter grid search defined above
+            "use_lstm": use_lstm,
+            "lstm_cell_size": 256,
         }
 
         self.config: TrainerConfigDict = {
@@ -47,16 +49,14 @@ class RayOptimizer:
             # One worker per agent. You can increase this but it will run fewer parallel trainings.
             "num_workers": 10,
             "num_envs_per_worker": 1,
-            "evaluation_num_workers": 1,
+            # "evaluation_num_workers": 1,
             "num_gpus": 1,
             "clip_rewards": True,
             # "lr": LEARNING_RATE,  # Hyperparameter grid search defined above
             # This can have a big impact on the result and needs to be properly tuned (range is 0 to 1)
             # "gamma": 0.50,
             "observation_filter": "MeanStdFilter",  # normalizing observation space
-            # "model": {
-            #     "fcnet_hiddens": FC_SIZE,  # Hyperparameter grid search defined above
-            # },
+            "model": self.model_conf,
             # "sgd_minibatch_size": MINIBATCH_SIZE,  # Hyperparameter grid search defined above
             "evaluation_interval": 5,  # Run evaluation on every iteration
             "evaluation_config": {
@@ -73,6 +73,8 @@ class RayOptimizer:
             "env_config": self.env_test_config,
             "evaluation_num_workers": 1,
             "in_evaluation": True,
+            "clip_rewards": True,
+            "model": self.model_conf,
             "evaluation_config": {
                 "mode": "test"
             },
@@ -82,6 +84,7 @@ class RayOptimizer:
         return tune.run(
             self.algo,
             name=f'{self.algo}-{self.reward}',
+            # trial_name_creator=self._trail_name_creator,
             # stop={"episode_reward_mean": 500},
             config=self.config,
             local_dir=RAY_RESULTS,
@@ -99,8 +102,12 @@ class RayOptimizer:
         obs = env.reset()
         step = 0
         info_list = None
+        state_init = [np.zeros(256, np.float32) for _ in range(2)]
         while not done and step < test_steps:
-            action = trainer.compute_single_action(obs)
+            if self.use_lstm:
+                action, state_init, logits = trainer.compute_single_action(obs, state=state_init)
+            else:
+                action = trainer.compute_action(obs)
             obs, reward, done, info = env.step(action)
             if info_list is None:
                 info_list = np.array([[
@@ -122,4 +129,10 @@ class RayOptimizer:
         else:
             Exception('algorithm not implemented yet')
 
-
+    # def _trail_name_creator(self, trail: Trial) -> str:
+    #     algo_folder = os.path.join(RAY_RESULTS, f'{self.algo}-{self.reward}',)
+    #
+    #
+    #
+    #     trail_id = get_latest_run_id() + 1
+    #
