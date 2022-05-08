@@ -9,16 +9,16 @@ def create_ray_test_arg_parser():
     parser = create_arg_parser()
     # TODO: add specific argument for ray trainer
     parser.add_argument('-id', '--id', required=True, help="Trained model id")
-    parser.add_argument('-rs', '--resume', action='store_true', help='Resume training (default False)')
     parser.add_argument('-st', '--steps', required=False, default=TEST_STEPS, help='Number of steps to test on')
-    parser.add_argument('--show-figures', action='store_true')
-    parser.add_argument('--render', action='store_true')
-    parser.add_argument('-lstm', action='store_true')
+    parser.add_argument('--show-figures', action='store_true', help="Show test results figures at the end")
+    parser.add_argument('--render', action='store_true', help="Render and visualise environment")
+    parser.add_argument('-lstm', action='store_true', help="Wrap policy network with LSTM")
+    parser.add_argument('--training-set', action='store_true', help="Test on the training set instead of the test set")
 
     group = parser.add_mutually_exclusive_group(required=False)
-    group.add_argument('-n', '--number', help='Number of checkpoint')
-    group.add_argument('-ns', '--numbers', nargs="+", help='Number of model to test')
-    group.add_argument('--random', action='store_true')
+    group.add_argument('-n', '--number', help='Number of checkpoint to test')
+    group.add_argument('-ns', '--numbers', nargs="+", help='List of checkpoints to test')
+    group.add_argument('--random', action='store_true', help="Test model without training checkpoint (random actions)")
 
     return parser
 
@@ -50,7 +50,7 @@ def run_ray_tester():
 
     register_env("TradingEnv", create_env)
 
-    optimizer = RayOptimizer(args.data, args.algo, args.reward, args.add_indicators, args.lstm)
+    optimizer = RayOptimizer(args.data, args.algo, args.reward, args.add_indicators, args.lstm, args.training_set)
 
     if args.random:
         ray_test(args, None, optimizer)

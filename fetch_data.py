@@ -4,7 +4,7 @@ import argparse
 from trader.data.fetchers.binance_fetcher import BinanceFetcher
 from trader.helpers.vars import *
 
-# only one exchange is supported know
+# only one exchange is supported for now TODO: add other exchanges
 EXCHANGES = ['binance', ]
 
 

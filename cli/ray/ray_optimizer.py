@@ -19,7 +19,8 @@ from cli.commun import *
 
 class RayOptimizer:
 
-    def __init__(self, data: str, algo: str, reward='sharp', add_indicators=False, use_lstm=False):
+    def __init__(self, data: str, algo: str, reward='sharp', add_indicators=False, use_lstm=False,
+                 test_on_training_set=False):
         self.algo = algo
         self.reward = reward
         self.use_lstm = use_lstm
@@ -33,7 +34,7 @@ class RayOptimizer:
         }
 
         self.env_test_config = self.env_train_config.copy()
-        self.env_test_config['train'] = False
+        self.env_test_config['train'] = test_on_training_set
         self.model_conf = {
             # "fcnet_hiddens": FC_SIZE,  # Hyperparameter grid search defined above
             "use_lstm": use_lstm,
@@ -48,7 +49,7 @@ class RayOptimizer:
             "ignore_worker_failures": True,
             # One worker per agent. You can increase this but it will run fewer parallel trainings.
             "num_workers": 10,
-            "num_envs_per_worker": 1,
+            "num_envs_per_worker": 2,
             # "evaluation_num_workers": 1,
             "num_gpus": 1,
             "clip_rewards": True,
@@ -84,7 +85,7 @@ class RayOptimizer:
         return tune.run(
             self.algo,
             name=f'{self.algo}-{self.reward}',
-            # trial_name_creator=self._trail_name_creator,
+            trial_name_creator=self._trail_name_creator,
             # stop={"episode_reward_mean": 500},
             config=self.config,
             local_dir=RAY_RESULTS,
@@ -107,7 +108,7 @@ class RayOptimizer:
             if self.use_lstm:
                 action, state_init, logits = trainer.compute_single_action(obs, state=state_init)
             else:
-                action = trainer.compute_action(obs)
+                action = trainer.compute_single_action(obs)
             obs, reward, done, info = env.step(action)
             if info_list is None:
                 info_list = np.array([[
@@ -129,10 +130,6 @@ class RayOptimizer:
         else:
             Exception('algorithm not implemented yet')
 
-    # def _trail_name_creator(self, trail: Trial) -> str:
-    #     algo_folder = os.path.join(RAY_RESULTS, f'{self.algo}-{self.reward}',)
-    #
-    #
-    #
-    #     trail_id = get_latest_run_id() + 1
-    #
+    def _trail_name_creator(self, trail: Trial) -> str:
+        trail_name = f"{self.algo}{'-LSTM' if self.use_lstm else ''}"
+        return trail_name
