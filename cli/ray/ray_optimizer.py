@@ -29,8 +29,10 @@ class RayOptimizer:
             'add_indicators': add_indicators,
             'reward': reward,
             'train': True,
-            'initial_balance': 10000,
-            'commission_percent': 0.3
+            'initial_balance': DEFAULT_INITIAL_BALANCE,
+            'commission_percent': DEFAULT_COMMISSION_PERCENT,
+            'window_size': DEFAULT_WINDOW_SIZE,
+            'max_ep_len': MAX_EP_LENGTH,
         }
 
         self.env_test_config = self.env_train_config.copy()

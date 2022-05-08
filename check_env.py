@@ -1,5 +1,6 @@
 import time
 
+from cli.commun import create_env
 from trader.data.simulated_data_provider import SimulatedDataProvider
 from trader.env.reward.incremental_profit_reward import IncrementalProfitReward
 from trader.env.reward.risk_ratio_reward import RiskRatioReward
@@ -14,22 +15,33 @@ data_provider = SimulatedDataProvider(
     add_indicators=True,
 )
 
-env = TradingEnv(
-    data_provider=data_provider,
-    reward_strategy=RiskRatioReward,
-    trade_strategy=SimulatedStrategy,
-    initial_balance=10000,
-    commissionPercent=0.3,
-    reward_kwargs={
-        "ratio": "sharp"
-    }
-)
+# env = TradingEnv(
+#     data_provider=data_provider,
+#     reward_strategy=RiskRatioReward,
+#     trade_strategy=SimulatedStrategy,
+#     initial_balance=10000,
+#     commissionPercent=0.3,
+#     reward_kwargs={
+#         "ratio": "sharp"
+#     }
+# )
+
+env = create_env({
+    'data': '/opt/dev/trading/pfe/DRL-trading-bot/dataset/binance-BTCUSDT-1h.csv',
+    'add_indicators': True,
+    'reward': 'simple_profit',
+    'train': True,
+    'initial_balance': 10000,
+    'commission_percent': 0.3,
+    'window_size': 10,
+    'max_ep_len': 720,
+})
 
 obs = env.reset()
 done = False
 times = []
 i = 0
-while not done and i< 2:
+while not done and i< 10:
     tic = time.time()
     action = env.sample_action()
     obs, reward, done, info = env.step(action)
@@ -38,8 +50,8 @@ while not done and i< 2:
     env.render()
     i += 1
     print(f'\n\n\nobs => {env.current_observation}')
-    print(f'\nobs => {obs[-10:]}')
-    print(f'returns => {env.account_history}')
+    # print(f'\nobs => {obs[-10:]}')
+    print(f'account history => \n{env.account_history}')
     print(f'reward => {reward}\n')
     # time.sleep(2)
 

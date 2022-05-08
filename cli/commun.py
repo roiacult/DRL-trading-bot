@@ -1,16 +1,17 @@
 import argparse
 import glob
 import os
-import pathlib
 
 from matplotlib import pyplot as plt
 
 from trader.data.simulated_data_provider import SimulatedDataProvider
 from trader.env.reward.incremental_profit_reward import IncrementalProfitReward
 from trader.env.reward.risk_ratio_reward import RiskRatioReward
+from trader.env.reward.simple_profit_reward import SimpleProfitReward
 from trader.env.reward.weighted_unrealized_pnl_reward import WeightedUnrealizedPnlReward
 from trader.env.strategy.simulated_strategy import SimulatedStrategy
 from trader.env.trading_env import TradingEnv
+from trader.helpers.vars import *
 
 path = pathlib.Path(__file__).parent.parent.resolve()
 
@@ -26,7 +27,7 @@ TIME_TO_SAVE = 10000
 TEST_STEPS = 90
 
 INDEXES = ['timestamps', 'net_worths', 'current_price', 'assets_held']
-REWARD_TYPES = ['incremental', 'weighted_unrealized_pnl', 'sharp', 'sortino', 'calmar']
+REWARD_TYPES = ['incremental', 'weighted_unrealized_pnl', 'sharp', 'sortino', 'calmar', 'simple_profit']
 TEST_TYPE = ['test', 'train']
 ALGO_LIST = ['PPO', 'DQN', 'A2C']
 OPTIONS = ['train', 'test', 'ray_train', 'ray_test']
@@ -51,10 +52,13 @@ def create_env(config):
     train_provider, test_provider = SimulatedDataProvider(
         csv_data_path=config.get('data', None),
         add_indicators=config.get('add_indicators', False),
+        max_ep_len=config.get('max_ep_len', MAX_EP_LENGTH),
+        window_size=config.get('window_size', DEFAULT_WINDOW_SIZE)
     ).split_data()
 
     # selecting reward function
     if config.get('reward', None) == 'incremental':
+        # TODO: Deprecated
         Reward = IncrementalProfitReward
         reward_kwargs = {}
     elif config.get('reward', None) == 'weighted_unrealized_pnl':
@@ -69,17 +73,20 @@ def create_env(config):
     elif config.get('reward', None) == 'calmar':
         Reward = RiskRatioReward
         reward_kwargs = dict(ratio='calmar')
+    elif config.get('reward', None) == 'simple_profit':
+        Reward = SimpleProfitReward
+        reward_kwargs = dict(window_size=train_provider.window_size)
     else:
         # default reward function
-        Reward = IncrementalProfitReward
+        Reward = SimpleProfitReward
         reward_kwargs = {}
 
     return TradingEnv(
         data_provider=train_provider if config.get('train', False) else test_provider,
         reward_strategy=Reward,
         trade_strategy=SimulatedStrategy,
-        initial_balance=config.get('initial_balance', 0),
-        commissionPercent=config.get('commission_percent', 0),
+        initial_balance=config.get('initial_balance', DEFAULT_INITIAL_BALANCE),
+        commissionPercent=config.get('commission_percent', DEFAULT_COMMISSION_PERCENT),
         maxSlippagePercent=0.,
         reward_kwargs=reward_kwargs
     )
