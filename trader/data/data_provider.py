@@ -4,6 +4,8 @@ from abc import ABCMeta, abstractmethod
 
 import ta
 
+from trader.helpers.vars import DEFAULT_WINDOW_SIZE, MAX_EP_LENGTH
+
 
 class DataProvider(object, metaclass=ABCMeta):
     columns = ['Date', 'Open', 'High', 'Low', 'Close', 'Volume']
@@ -14,7 +16,7 @@ class DataProvider(object, metaclass=ABCMeta):
         'momentum_rsi', 'momentum_tsi', 'momentum_uo', 'momentum_ao',
 
         # volume indicators
-        'volume_mfi',  'volume_adi', 'volume_obv', 'volume_cmf', 'volume_fi', 'volume_em', 'volume_vpt', 'volume_nvi',
+        'volume_mfi', 'volume_adi', 'volume_obv', 'volume_cmf', 'volume_fi', 'volume_em', 'volume_vpt', 'volume_nvi',
 
         # trend indicators
         'trend_macd', 'trend_vortex_ind_pos', 'trend_vortex_ind_neg', 'trend_vortex_ind_diff', 'trend_trix',
@@ -30,9 +32,14 @@ class DataProvider(object, metaclass=ABCMeta):
     ]
 
     @abstractmethod
-    def __init__(self, add_indicators: bool = False, **kwargs):
+    def __init__(
+            self, window_size: int = DEFAULT_WINDOW_SIZE, max_ep_len: int = MAX_EP_LENGTH,
+            add_indicators: bool = False, **kwargs
+    ):
 
         self.add_indicators = add_indicators
+        self.window_size = window_size
+        self.max_ep_len = max_ep_len
         data_columns: Dict[str, str] = kwargs.get('data_columns', None)
 
         if data_columns is not None:
@@ -131,3 +138,10 @@ class DataProvider(object, metaclass=ABCMeta):
         :return: Pandas.DataFrame of all dataset
         """
         raise NotImplementedError
+
+    def seed(self, seed: int = None):
+        """
+        set the seed for random generators
+        :param seed:
+        """
+        return

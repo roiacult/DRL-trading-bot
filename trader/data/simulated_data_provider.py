@@ -1,6 +1,7 @@
 import os
 from typing import Tuple
 
+import numpy as np
 import pandas as pd
 from trader.data.data_provider import DataProvider
 
@@ -43,17 +44,20 @@ class SimulatedDataProvider(DataProvider):
     def create(data_frame: pd.DataFrame, **kwargs):
         return SimulatedDataProvider(data_frame=data_frame, prepare=False, **kwargs)
 
-    def reset(self):
-        self.timestep_index = 0
+    def reset(self, ):
+        self.initial_timestep = int(np.random.uniform(
+            self.window_size - 1, len(self.data_frame) - self.max_ep_len
+        ))
+        self.timestep_index = self.initial_timestep
 
     def has_next_timestep(self) -> bool:
-        return self.timestep_index < len(self.data_frame)
+        is_max_len = (self.timestep_index - self.initial_timestep) >= self.max_ep_len
+        is_last_index = self.timestep_index >= len(self.data_frame)
+        return not is_last_index and not is_max_len
 
     def next_timestep(self) -> pd.DataFrame:
-        # columns = self.all_columns()
-        # frame = self.data_frame[columns].values[self.timestep_index]
-        # frame = pd.DataFrame([frame], columns=columns)
-        frame = self.data_frame.iloc[[self.timestep_index]].reset_index(drop=True)
+        frame = self.data_frame.iloc[
+                self.timestep_index-self.window_size+1:self.timestep_index+1].reset_index(drop=True)
         self.timestep_index += 1
 
         return frame
@@ -73,3 +77,7 @@ class SimulatedDataProvider(DataProvider):
 
     def all_timesteps(self) -> pd.DataFrame:
         return self.data_frame
+
+    def seed(self, seed: int = None):
+        super().seed(seed)
+        np.random.seed(seed)

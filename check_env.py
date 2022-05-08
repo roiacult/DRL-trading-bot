@@ -2,33 +2,48 @@ import time
 
 from trader.data.simulated_data_provider import SimulatedDataProvider
 from trader.env.reward.incremental_profit_reward import IncrementalProfitReward
+from trader.env.reward.risk_ratio_reward import RiskRatioReward
 from trader.env.strategy.simulated_strategy import SimulatedStrategy
 from trader.env.trading_env import TradingEnv
 from stable_baselines3.common.env_checker import check_env
 
-data_provider = SimulatedDataProvider(csv_data_path='dataset/BTCUSDT-15m-dataset.csv', add_indicators=True)
+data_provider = SimulatedDataProvider(
+    csv_data_path='dataset/binance-BTCUSDT-1h.csv',
+    window_size=10,
+    max_ep_len=6000,
+    add_indicators=True,
+)
 
 env = TradingEnv(
     data_provider=data_provider,
-    reward_strategy=IncrementalProfitReward,
+    reward_strategy=RiskRatioReward,
     trade_strategy=SimulatedStrategy,
     initial_balance=10000,
     commissionPercent=0.3,
+    reward_kwargs={
+        "ratio": "sharp"
+    }
 )
 
 obs = env.reset()
-# done = False
-# times = []
-# while not done:
-#     tic = time.time()
-#     action = env.sample_action()
-#     obs, reward, done, info = env.step(action)
-#     toc = time.time()
-#     times.append(toc - tic)
-#     env.render()
-#     # time.sleep(2)
+done = False
+times = []
+i = 0
+while not done and i< 2:
+    tic = time.time()
+    action = env.sample_action()
+    obs, reward, done, info = env.step(action)
+    toc = time.time()
+    times.append(toc - tic)
+    env.render()
+    i += 1
+    print(f'\n\n\nobs => {env.current_observation}')
+    print(f'\nobs => {obs[-10:]}')
+    print(f'returns => {env.account_history}')
+    print(f'reward => {reward}\n')
+    # time.sleep(2)
 
-check_env(env)
+# check_env(env)
 
 # print(f'\n\ntimes     => {times}')
 # print(f'mean time => {sum(times) / len(times)}\n\n')
@@ -48,6 +63,8 @@ check_env(env)
 
 # step(action) benchmark
 # exec time avg: 0.004067301273345947
+# after updating environment
+# exec time avg: 0.002486441922187805
 
 
 # num_workers => 10 ---------------------------

@@ -4,9 +4,6 @@ from typing import Type, List, Dict
 import gym
 import numpy as np
 import pandas as pd
-
-from trader.data.data_mappers import log_and_difference_mapper, max_min_normalize_mapper, difference_mapper, \
-    mean_normalize_mapper
 from trader.data.data_provider import DataProvider
 from trader.env.reward.incremental_profit_reward import IncrementalProfitReward
 from trader.env.reward.base_reward import BaseReward
@@ -14,6 +11,7 @@ from trader.env.strategy.base_strategy import BaseStrategy
 from trader.env.strategy.simulated_strategy import SimulatedStrategy
 from trader.helpers.logger import init_logger
 from trader.helpers.trading_graph import TradingGraph
+from trader.helpers.vars import *
 
 np.seterr(invalid='ignore')
 
@@ -36,12 +34,12 @@ class TradingEnv(gym.Env):
             data_provider: DataProvider,
             reward_strategy: Type[BaseReward] = IncrementalProfitReward,
             trade_strategy: Type[BaseStrategy] = SimulatedStrategy,
-            window_size: int = 10,
-            initial_balance: int = 10000,
-            commissionPercent: float = 0.25,
-            maxSlippagePercent: float = 2.0,
+            initial_balance: int = DEFAULT_INITIAL_BALANCE,
+            commissionPercent: float = DEFAULT_COMMISSION_PERCENT,
+            maxSlippagePercent: float = DEFAULT_MAX_SLIPPAGE_PERCENT,
             **kwargs,
     ):
+        self._max_episode_steps = data_provider.max_ep_len
         super(TradingEnv, self).__init__()
 
         self.logger = kwargs.get('logger', init_logger(__name__, show_debug=kwargs.get('show_debug', True)))
@@ -54,7 +52,8 @@ class TradingEnv(gym.Env):
         self.initial_balance = round(initial_balance, self.base_precision)
         self.commissionPercent = commissionPercent
         self.maxSlippagePercent = maxSlippagePercent
-        self.window_size = window_size
+        self.window_size = data_provider.window_size
+        self.max_ep_len = data_provider.max_ep_len
 
         self.data_provider = data_provider
         reward_kwargs = kwargs.get('reward_kwargs', {})
@@ -69,19 +68,13 @@ class TradingEnv(gym.Env):
         )
 
         self.render_benchmarks: List[Dict] = kwargs.get('render_benchmarks', [])
-        self.normalize_obs: bool = kwargs.get('normalize_obs', False)
-        self.stationarize_obs: bool = kwargs.get('stationarize_obs', False)
-        self.normalize_rewards: bool = kwargs.get('normalize_rewards', False)
-        self.stationarize_rewards: bool = kwargs.get('stationarize_rewards', False)
+        self.n_discrete_actions: int = kwargs.get('n_discrete_actions', N_DISCRETE_ACTION)
 
-        self.n_discrete_actions: int = kwargs.get('n_discrete_actions', 24)
         self.action_space = gym.spaces.Discrete(self.n_discrete_actions)
 
         self.n_features = 6 + (len(self.data_provider.all_columns()) - 1) * self.window_size
         self.obs_shape = (self.n_features,)
         self.observation_space = gym.spaces.Box(low=-np.inf, high=np.inf, shape=self.obs_shape, dtype=np.float16)
-
-        self.observations = pd.DataFrame(None, columns=self.data_provider.columns)
 
     def sample_action(self):
         return int(np.random.uniform(0, self.n_discrete_actions))
@@ -94,14 +87,7 @@ class TradingEnv(gym.Env):
         self.net_worths: List[float] = [self.initial_balance]
         self.timestamps = []
         self.asset_held = 0
-        self.current_step = self.window_size
-        self.observations = pd.DataFrame(None, columns=self.data_provider.columns)
-
-        for i in range(self.window_size):
-            self.current_timestep = self.data_provider.next_timestep()
-            self.timestamps.append(pd.to_datetime(self.current_timestep[self.data_provider.date_col].item(), unit='s'))
-            self.observations = self.observations.append(self.current_timestep, ignore_index=True)
-            self.net_worths.append(self.initial_balance)
+        self.current_step = 0
 
         self.account_history = pd.DataFrame([{
             'balance': self.balance,
@@ -120,28 +106,17 @@ class TradingEnv(gym.Env):
         return float(self.current_timestep[column_key])
 
     def _next_timestep_observation(self):
-        self.current_timestep = self.data_provider.next_timestep()
-        self.timestamps.append(pd.to_datetime(self.current_timestep[self.data_provider.date_col].item(), unit='s'))
-        self.observations = self.observations.append(self.current_timestep, ignore_index=True)
+        self.current_observation = self.data_provider.next_timestep()
+        self.current_timestep = self.current_observation.iloc[[-1]]
+        self.timestamps.append(self.current_timestep[self.data_provider.date_col])
 
         columns = self.data_provider.all_columns()
         columns.remove(self.data_provider.date_col)
 
-        if self.stationarize_obs:
-            observations = log_and_difference_mapper(self.observations, inplace=False, columns=columns)
-            scaled_history = log_and_difference_mapper(self.account_history, inplace=False)
-        else:
-            observations = self.observations
-            scaled_history = self.account_history
+        obs = self.current_observation[columns].to_numpy().flatten()
+        obs = np.insert(obs, len(obs), self.account_history.values[-1], axis=0)
 
-        if self.normalize_obs:
-            observations = max_min_normalize_mapper(observations, columns=columns)
-            scaled_history = max_min_normalize_mapper(scaled_history, inplace=False)
-
-        obs = observations[columns].values[-self.window_size:].flatten()
-        obs = np.insert(obs, len(obs), scaled_history.values[-1], axis=0)
-
-        obs = np.reshape(obs.astype('float16'), self.obs_shape)
+        obs = np.reshape(obs.astype('float32'), self.obs_shape)
         obs[np.bitwise_not(np.isfinite(obs))] = 0
 
         return obs
@@ -233,7 +208,6 @@ class TradingEnv(gym.Env):
         reward = self.reward_strategy.get_reward(
             current_step=self.current_step,
             current_price=self._current_price,
-            observations=self.observations,
             account_history=self.account_history,
             net_worths=self.net_worths
         )
@@ -242,17 +216,11 @@ class TradingEnv(gym.Env):
 
         self.rewards.append(reward)
 
-        if self.stationarize_rewards:
-            rewards = difference_mapper(self.rewards, inplace=False)
-        else:
-            rewards = self.rewards
+        return float(self.rewards[-1])
 
-        if self.normalize_rewards:
-            mean_normalize_mapper(rewards, inplace=True)
-
-        rewards = np.array(rewards).flatten()
-
-        return float(rewards[-1])
+    def seed(self, seed=None):
+        self.data_provider.seed(seed)
+        return super().seed(seed)
 
     def render(self, mode='human'):
         if mode == 'system':

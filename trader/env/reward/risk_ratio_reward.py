@@ -17,7 +17,7 @@ class RiskRatioReward(BaseReward):
     def reset(self):
         pass
 
-    def get_reward(self, current_step: int, current_price: Callable[[str], float], observations: pd.DataFrame,
+    def get_reward(self, current_step: int, current_price: Callable[[str], float],
                    account_history: pd.DataFrame, net_worths: List[float]) -> float:
         if net_worths and len(net_worths) > 1:
             returns = np.diff(net_worths)
