@@ -34,6 +34,7 @@ class RayOptimizer:
             'commission_percent': DEFAULT_COMMISSION_PERCENT,
             'window_size': DEFAULT_WINDOW_SIZE,
             'max_ep_len': MAX_EP_LENGTH,
+            'use_lstm': use_lstm,
         }
 
         self.env_test_config = self.env_train_config.copy()

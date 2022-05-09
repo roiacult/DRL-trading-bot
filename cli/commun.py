@@ -52,11 +52,17 @@ def create_arg_parser():
 
 
 def create_env(config):
+
+    if config.get('use_lstm', False):
+        window_size = 1
+    else:
+        window_size = config.get('window_size', DEFAULT_WINDOW_SIZE)
+
     train_provider, test_provider = SimulatedDataProvider(
         csv_data_path=config.get('data', None),
         add_indicators=config.get('add_indicators', False),
         max_ep_len=config.get('max_ep_len', MAX_EP_LENGTH),
-        window_size=config.get('window_size', DEFAULT_WINDOW_SIZE)
+        window_size=window_size,
     ).split_data()
 
     provider = train_provider if config.get('train', False) else test_provider

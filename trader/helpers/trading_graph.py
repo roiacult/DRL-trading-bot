@@ -25,14 +25,18 @@ class TradingGraph:
         # Create a figure on screen and set the title
         self.fig = plt.figure(figsize=(16, 10), dpi=80)
 
+        shape = (6, 6)
+
         # Create top subplot for net worth axis
-        self.net_worth_ax = plt.subplot2grid((6, 1), (0, 0), rowspan=2, colspan=1)
-
+        self.net_worth_ax = plt.subplot2grid(shape, (0, 0), rowspan=2, colspan=5)
         # Create bottom subplot for shared price/volume axis
-        self.price_ax = plt.subplot2grid((6, 1), (2, 0), rowspan=8, colspan=1, sharex=self.net_worth_ax)
-
+        self.price_ax = plt.subplot2grid(shape, (2, 0), rowspan=4, colspan=5, sharex=self.net_worth_ax)
         # Create a new axis for volume which shares its x-axis with price
         self.volume_ax = self.price_ax.twinx()
+
+        # balance and asset held subplot
+        self.balance = plt.subplot2grid(shape, (0, 5), rowspan=6, colspan=1)
+        # self.asset_held = plt.subplot2grid(shape, (0, 5), rowspan=6, colspan=1)
 
         # Add padding to make graph easier to view
         plt.subplots_adjust(left=0.11, bottom=0.24, right=0.90, top=0.90, wspace=0.2, hspace=0)
@@ -82,6 +86,14 @@ class TradingGraph:
 
         # TODO: Plot price using candlestick graph from mpl_finance
         self.price_ax.plot(times, self.df['Close'].values[step_range], color="black")
+        # mpf_data: pd.DataFrame = self.df[['Date', 'Open', 'Close', 'High', 'Low']].iloc[step_range].copy()
+        # mpf_data = mpf_data.set_index('Date', drop=True)
+        # mpf.plot(mpf_data, ax=self.price_ax, type='line', )
+        # candlesticks = zip(times,
+        #                    self.df['Open'].values[step_range], self.df['Close'].values[step_range],
+        #                    self.df['High'].values[step_range], self.df['Low'].values[step_range])
+        # Plot price using candlestick graph from mpl_finance
+        # candlestick(self.price_ax, candlesticks, width=1, colorup='#27A59A', colordown='#EF534F')
 
         last_time = self.df['Date'].values[current_step]
         last_close = self.df['Close'].values[current_step]
@@ -126,10 +138,21 @@ class TradingGraph:
                                        size="large",
                                        arrowprops=dict(arrowstyle='simple', facecolor=color))
 
+    def _render_balance(self, step_range, current_step, balance, asset_held):
+        self.balance.clear()
+        current_price = self.df['Close'].iloc[current_step]
+        x = ['USDT', 'ASSET']
+        y = [balance, asset_held*current_price]
+
+        self.balance.bar(x, y, color=['#ffa929', '#ff297f'])
+        self.balance.set_title("Balance")
+
     def render(self, current_step: int,
                net_worths: List[float],
                benchmarks: List[BaseBenchmark],
-               trades: List[dict], window_size: int = 200):
+               trades: List[dict],
+               balance: float, asset_held: float,
+               window_size: int = 200):
 
         net_worth = round(net_worths[-1], 2)
         initial_net_worth = round(net_worths[0], 2)
@@ -146,6 +169,7 @@ class TradingGraph:
         self._render_price(step_range, times, current_step)
         self._render_volume(step_range, times)
         self._render_trades(step_range, trades)
+        self._render_balance(step_range, current_step,balance, asset_held)
 
         date_col = pd.to_datetime(self.df['Date'], unit='s').dt.strftime('%m/%d/%Y %H:%M')
         date_labels = date_col.values[step_range]

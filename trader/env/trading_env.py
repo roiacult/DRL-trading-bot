@@ -246,8 +246,10 @@ class TradingEnv(gym.Env):
                 self.viewer = TradingGraph(self.data_provider.ep_timesteps())
             self.viewer.render(
                 self.current_step, self.net_worths,
-                self.benchmarks, self.trades
+                self.benchmarks, self.trades,
+                self.balance, self.asset_held,
             )
+            print(f'balance => {self.balance}')
 
     def close(self):
         if self.viewer is not None:
