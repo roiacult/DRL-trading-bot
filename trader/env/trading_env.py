@@ -5,6 +5,7 @@ import gym
 import numpy as np
 import pandas as pd
 from trader.data.data_provider import DataProvider
+from trader.env.benchmarks.base_benchmark import BaseBenchmark
 from trader.env.reward.incremental_profit_reward import IncrementalProfitReward
 from trader.env.reward.base_reward import BaseReward
 from trader.env.strategy.base_strategy import BaseStrategy
@@ -44,7 +45,7 @@ class TradingEnv(gym.Env):
 
         self.logger = kwargs.get('logger', init_logger(__name__, show_debug=kwargs.get('show_debug', True)))
 
-        self.base_precision: int = kwargs.get('base_precision', 2)
+        self.base_precision: int = kwargs.get('base_precision', 8)
         self.asset_precision: int = kwargs.get('asset_precision', 8)
         self.min_cost_limit: float = kwargs.get('min_cost_limit', 1E-3)
         self.min_amount_limit: float = kwargs.get('min_amount_limit', 1E-3)
@@ -67,7 +68,7 @@ class TradingEnv(gym.Env):
             min_amount_limit=self.min_amount_limit
         )
 
-        self.render_benchmarks: List[Dict] = kwargs.get('render_benchmarks', [])
+        self.render_benchmarks: List[Type[BaseBenchmark]] = kwargs.get('render_benchmarks', [])
         self.n_discrete_actions: int = kwargs.get('n_discrete_actions', N_DISCRETE_ACTION)
 
         self.action_space = gym.spaces.Discrete(self.n_discrete_actions)
@@ -80,8 +81,15 @@ class TradingEnv(gym.Env):
         return int(np.random.uniform(0, self.n_discrete_actions))
 
     def reset(self):
-        self.data_provider.reset()
+        self.initial_timestep = self.data_provider.reset()
         self.reward_strategy.reset()
+
+        self.benchmarks = [
+            Benchmark(
+                self.data_provider.ep_timesteps()['Close'],
+                self.initial_balance, self.commissionPercent
+            ) for Benchmark in self.render_benchmarks
+        ]
 
         self.balance = self.initial_balance
         self.net_worths: List[float] = [self.initial_balance]
@@ -99,6 +107,11 @@ class TradingEnv(gym.Env):
         }])
         self.trades = []
         self.rewards = [0]
+
+        # reset trading viewer
+        if self.viewer is not None:
+            self.viewer.close()
+            self.viewer = None
 
         return self._next_timestep_observation()
 
@@ -230,10 +243,10 @@ class TradingEnv(gym.Env):
             self.logger.info('Net worth: ' + str(self.net_worths[-1]))
         elif mode == 'human':
             if self.viewer is None:
-                self.viewer = TradingGraph(self.data_provider.all_timesteps())
+                self.viewer = TradingGraph(self.data_provider.ep_timesteps())
             self.viewer.render(
                 self.current_step, self.net_worths,
-                self.render_benchmarks, self.trades
+                self.benchmarks, self.trades
             )
 
     def close(self):

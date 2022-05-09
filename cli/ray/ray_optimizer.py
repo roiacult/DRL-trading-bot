@@ -24,6 +24,7 @@ class RayOptimizer:
         self.algo = algo
         self.reward = reward
         self.use_lstm = use_lstm
+        self.data = data
         self.env_train_config = {
             'data': data,
             'add_indicators': add_indicators,
@@ -50,8 +51,8 @@ class RayOptimizer:
             "framework": "torch",
             "ignore_worker_failures": True,
             # One worker per agent. You can increase this but it will run fewer parallel trainings.
-            "num_workers": 10,
-            "num_envs_per_worker": 2,
+            "num_workers": 11,
+            "num_envs_per_worker": 1,
             # "evaluation_num_workers": 1,
             "num_gpus": 1,
             "clip_rewards": True,
@@ -61,7 +62,7 @@ class RayOptimizer:
             "observation_filter": "MeanStdFilter",  # normalizing observation space
             "model": self.model_conf,
             # "sgd_minibatch_size": MINIBATCH_SIZE,  # Hyperparameter grid search defined above
-            "evaluation_interval": 5,  # Run evaluation on every iteration
+            "evaluation_interval": 2,  # Run evaluation on every iteration
             "evaluation_config": {
                 "env_config": self.env_test_config,
                 "explore": False,  # We don't want to explore during evaluation. All actions have to be repeatable.
@@ -133,5 +134,8 @@ class RayOptimizer:
             Exception('algorithm not implemented yet')
 
     def _trail_name_creator(self, trail: Trial) -> str:
-        trail_name = f"{self.algo}{'-LSTM' if self.use_lstm else ''}"
+        data_name = self.data.split('/')[-1]
+        if data_name.endswith('.csv'):
+            data_name = data_name.split('.')[0]
+        trail_name = f"{data_name}{'-LSTM' if self.use_lstm else ''}"
         return trail_name

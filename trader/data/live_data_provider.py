@@ -14,20 +14,22 @@ class LiveDataProvider(DataProvider):
             self,
             **kwargs
     ):
-        raise Exception('Not implemented yet')
+        raise NotImplementedError
 
-    def reset(self):
-        raise Exception('Not implemented yet')
+    def reset(self) -> int:
+        raise NotImplementedError
 
     def has_next_timestep(self) -> bool:
-        raise Exception('Not implemented yet')
+        raise NotImplementedError
 
     def next_timestep(self) -> pd.DataFrame:
-        raise Exception('Not implemented yet')
+        raise NotImplementedError
 
     def split_data(self, train_split_percentage: float = 0.8) -> Tuple:
-        raise Exception('Not implemented yet')
+        raise NotImplementedError
 
     def all_timesteps(self) -> pd.DataFrame:
-        raise Exception('Not implemented yet')
+        raise NotImplementedError
 
+    def ep_timesteps(self) -> pd.DataFrame:
+        raise NotImplementedError

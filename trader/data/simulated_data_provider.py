@@ -44,11 +44,12 @@ class SimulatedDataProvider(DataProvider):
     def create(data_frame: pd.DataFrame, **kwargs):
         return SimulatedDataProvider(data_frame=data_frame, prepare=False, **kwargs)
 
-    def reset(self, ):
+    def reset(self, ) -> int:
         self.initial_timestep = int(np.random.uniform(
             self.window_size - 1, len(self.data_frame) - self.max_ep_len
         ))
         self.timestep_index = self.initial_timestep
+        return self.initial_timestep
 
     def has_next_timestep(self) -> bool:
         is_max_len = (self.timestep_index - self.initial_timestep) >= self.max_ep_len
@@ -77,6 +78,9 @@ class SimulatedDataProvider(DataProvider):
 
     def all_timesteps(self) -> pd.DataFrame:
         return self.data_frame
+
+    def ep_timesteps(self) -> pd.DataFrame:
+        return self.data_frame.iloc[self.initial_timestep:self.initial_timestep+self.max_ep_len]
 
     def seed(self, seed: int = None):
         super().seed(seed)

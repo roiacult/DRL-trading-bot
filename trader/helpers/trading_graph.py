@@ -1,11 +1,14 @@
-
 import sys
+from typing import List
+
 import numpy as np
 import pandas as pd
 import matplotlib.pyplot as plt
 
 from matplotlib import style
 from pandas.plotting import register_matplotlib_converters
+
+from trader.env.benchmarks.base_benchmark import BaseBenchmark
 
 style.use('ggplot')
 register_matplotlib_converters()
@@ -37,7 +40,8 @@ class TradingGraph:
         # Show the graph without blocking the rest of the program
         plt.show(block=False)
 
-    def _render_net_worth(self, step_range, times, current_step, net_worths, benchmarks):
+    def _render_net_worth(self, step_range, times, current_step, net_worths,
+                          benchmarks: List[BaseBenchmark]):
         # Clear the frame rendered last step
         self.net_worth_ax.clear()
 
@@ -65,18 +69,18 @@ class TradingGraph:
         # Add space above and below min/max net worth
         self.net_worth_ax.set_ylim(min(net_worths) / 1.25, max(net_worths) * 1.25)
 
-    def _render_benchmarks(self, step_range, times, benchmarks):
+    def _render_benchmarks(self, step_range, times, benchmarks: List[BaseBenchmark]):
         colors = ['orange', 'cyan', 'purple', 'blue',
                   'magenta', 'yellow', 'black', 'red', 'green']
 
         for i, benchmark in enumerate(benchmarks):
-            self.net_worth_ax.plot(times, benchmark['values'][step_range],
-                                   label=benchmark['label'], color=colors[i % len(colors)], alpha=0.3)
+            self.net_worth_ax.plot(times, benchmark.net_worths[step_range],
+                                   label=benchmark.get_label(), color=colors[i % len(colors)], alpha=0.3)
 
     def _render_price(self, step_range, times, current_step):
         self.price_ax.clear()
 
-        # Plot price using candlestick graph from mpl_finance
+        # TODO: Plot price using candlestick graph from mpl_finance
         self.price_ax.plot(times, self.df['Close'].values[step_range], color="black")
 
         last_time = self.df['Date'].values[current_step]
@@ -100,7 +104,7 @@ class TradingGraph:
 
         volume = np.array(self.df['Volume'].values[step_range])
 
-        self.volume_ax.plot(times, volume,  color='blue')
+        self.volume_ax.plot(times, volume, color='blue')
         self.volume_ax.fill_between(times, volume, color='blue', alpha=0.5)
 
         self.volume_ax.set_ylim(0, max(volume) / VOLUME_CHART_HEIGHT)
@@ -122,7 +126,11 @@ class TradingGraph:
                                        size="large",
                                        arrowprops=dict(arrowstyle='simple', facecolor=color))
 
-    def render(self, current_step, net_worths, benchmarks, trades, window_size=200):
+    def render(self, current_step: int,
+               net_worths: List[float],
+               benchmarks: List[BaseBenchmark],
+               trades: List[dict], window_size: int = 200):
+
         net_worth = round(net_worths[-1], 2)
         initial_net_worth = round(net_worths[0], 2)
         profit_percent = round((net_worth - initial_net_worth) / initial_net_worth * 100, 2)
@@ -131,6 +139,7 @@ class TradingGraph:
 
         window_start = max(current_step - window_size, 0)
         step_range = slice(window_start, current_step + 1)
+
         times = self.df['Date'].values[step_range]
 
         self._render_net_worth(step_range, times, current_step, net_worths, benchmarks)
@@ -146,7 +155,7 @@ class TradingGraph:
         # Hide duplicate net worth date labels
         plt.setp(self.net_worth_ax.get_xticklabels(), visible=False)
 
-        # Necessary to view frames before they are unrendered
+        # Necessary to view frames before they are un-rendered
         plt.pause(0.001)
 
     def close(self):

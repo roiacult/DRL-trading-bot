@@ -99,7 +99,7 @@ class DataProvider(object, metaclass=ABCMeta):
         return all_cols
 
     @abstractmethod
-    def reset(self):
+    def reset(self) -> int:
         """
         This function is used to reset object internal state
         reset is always called when gym.Env reset method is called
@@ -133,6 +133,14 @@ class DataProvider(object, metaclass=ABCMeta):
 
     @abstractmethod
     def all_timesteps(self) -> pd.DataFrame:
+        """
+        return all dataset
+        :return: Pandas.DataFrame of all dataset
+        """
+        raise NotImplementedError
+
+    @abstractmethod
+    def ep_timesteps(self) -> pd.DataFrame:
         """
         return all dataset
         :return: Pandas.DataFrame of all dataset

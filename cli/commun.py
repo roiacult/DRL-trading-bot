@@ -5,6 +5,9 @@ import os
 from matplotlib import pyplot as plt
 
 from trader.data.simulated_data_provider import SimulatedDataProvider
+from trader.env.benchmarks.buy_and_hold import BuyAndHold
+from trader.env.benchmarks.sma_crossover import SmaCrossover
+from trader.env.benchmarks.rsi_divergence import RsiDivergence
 from trader.env.reward.incremental_profit_reward import IncrementalProfitReward
 from trader.env.reward.risk_ratio_reward import RiskRatioReward
 from trader.env.reward.simple_profit_reward import SimpleProfitReward
@@ -56,6 +59,8 @@ def create_env(config):
         window_size=config.get('window_size', DEFAULT_WINDOW_SIZE)
     ).split_data()
 
+    provider = train_provider if config.get('train', False) else test_provider
+
     # selecting reward function
     if config.get('reward', None) == 'incremental':
         # TODO: Deprecated
@@ -81,14 +86,23 @@ def create_env(config):
         Reward = SimpleProfitReward
         reward_kwargs = {}
 
+    initial_balance = config.get('initial_balance', DEFAULT_INITIAL_BALANCE)
+    commission = config.get('commission_percent', DEFAULT_COMMISSION_PERCENT)
+
+    if config.get('render_benchmarks', True):
+        render_benchmarks = [BuyAndHold, SmaCrossover, RsiDivergence]
+    else:
+        render_benchmarks = []
+
     return TradingEnv(
-        data_provider=train_provider if config.get('train', False) else test_provider,
+        data_provider=provider,
         reward_strategy=Reward,
         trade_strategy=SimulatedStrategy,
-        initial_balance=config.get('initial_balance', DEFAULT_INITIAL_BALANCE),
-        commissionPercent=config.get('commission_percent', DEFAULT_COMMISSION_PERCENT),
+        initial_balance=initial_balance,
+        commissionPercent=commission,
         maxSlippagePercent=0.,
-        reward_kwargs=reward_kwargs
+        reward_kwargs=reward_kwargs,
+        render_benchmarks=render_benchmarks,
     )
 
 
