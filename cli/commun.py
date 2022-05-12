@@ -1,10 +1,15 @@
 import argparse
 import glob
 import os
+from typing import List
 
+import numpy as np
 from matplotlib import pyplot as plt
+import matplotlib.dates as mdates
+from matplotlib.ticker import EngFormatter
 
 from trader.data.simulated_data_provider import SimulatedDataProvider
+from trader.env.benchmarks.base_benchmark import BaseBenchmark
 from trader.env.benchmarks.buy_and_hold import BuyAndHold
 from trader.env.benchmarks.sma_crossover import SmaCrossover
 from trader.env.benchmarks.rsi_divergence import RsiDivergence
@@ -16,14 +21,27 @@ from trader.env.strategy.simulated_strategy import SimulatedStrategy
 from trader.env.trading_env import TradingEnv
 from trader.helpers.vars import *
 
-path = pathlib.Path(__file__).parent.parent.resolve()
+import matplotlib
+from pandas.plotting import register_matplotlib_converters
 
-LOGS_DIR = os.path.join(path, 'logs')
-SAVE_DIR = os.path.join(path, 'models')
-DATA_PATH = os.path.join(path, 'dataset', 'Binance_BTCUSDT_d.csv')
-MODEL_DIR = os.path.join(path, 'models')
-SAVE_RESULTS_DIR = os.path.join(path, 'results')
-RAY_RESULTS = os.path.join(path, 'ray_results')
+# matplotlib.style.use('ggplot')
+# font = {
+#     'family': 'normal',
+#     'weight': 'normal',
+#     'size': 22
+# }
+# matplotlib.rc('font', **font)
+register_matplotlib_converters()
+
+PATH = pathlib.Path(__file__).parent.parent.resolve()
+
+LOGS_DIR = os.path.join(PATH, 'logs')
+SAVE_DIR = os.path.join(PATH, 'models')
+DATA_PATH = os.path.join(PATH, 'dataset', 'Binance_BTCUSDT_d.csv')
+MODEL_DIR = os.path.join(PATH, 'models')
+SAVE_RESULTS_DIR = os.path.join(PATH, 'results')
+RAY_RESULTS = os.path.join(PATH, 'ray_results')
+RAY_TEST_RESULTS = os.path.join(PATH, 'ray_test_results')
 
 TIME_STEPS = 1000000
 TIME_TO_SAVE = 10000
@@ -34,6 +52,10 @@ REWARD_TYPES = ['incremental', 'weighted_unrealized_pnl', 'sharp', 'sortino', 'c
 TEST_TYPE = ['test', 'train']
 ALGO_LIST = ['PPO', 'DQN', 'A2C']
 OPTIONS = ['train', 'test', 'ray_train', 'ray_test']
+BENCHMARKS_COLORS = ["#7FB5B5", "#F8F32B", "#826C34"]
+NETWORTH_COLOR = "#AF2B1E"
+ASSET_HELD_COLOR = "#AF2B1E"
+BENCHMARKS = [BuyAndHold, SmaCrossover, RsiDivergence]
 
 
 def create_arg_parser():
@@ -52,7 +74,21 @@ def create_arg_parser():
 
 
 def create_env(config):
+    """
+    :param config: {
+            'data': path to the dataset
+            'add_indicators': boolean indicate where to add indicators or not,
+            'reward': type of reward function used options: REWARD_TYPES,
+            'train': boolean to indicate if env is for training or testing,
+            'initial_balance': initial balance to start trading with,
+            'commission_percent': trading commissions percent,
+            'window_size': number of windows_size (price lookback),
+            'max_ep_len': maximum episode len,
+            'use_lstm': boolean indicate whether wrapping policy with lstm or not,
+        }
 
+    :return: TradingEnv
+    """
     if config.get('use_lstm', False):
         window_size = 1
     else:
@@ -96,7 +132,7 @@ def create_env(config):
     commission = config.get('commission_percent', DEFAULT_COMMISSION_PERCENT)
 
     if config.get('render_benchmarks', True):
-        render_benchmarks = [BuyAndHold, SmaCrossover, RsiDivergence]
+        render_benchmarks = BENCHMARKS
     else:
         render_benchmarks = []
 
@@ -136,8 +172,85 @@ def plot_testing_results(info, save_to=None, title='Testing trading rl agent', s
         plt.show()
 
 
+def ray_plot_test_results(
+        info_list: dict, benchmarks: List[BaseBenchmark], save_to=None,
+        title='Testing trading rl agent', show_figure=False
+):
+    fig = plt.figure(figsize=(20, 15))
+    plt.figtext(0.5, 0.01, title, wrap=True, horizontalalignment='center', fontsize=16)
+    shape = (6, 6)
+
+    net_worth_ax = plt.subplot2grid(shape, (0, 0), rowspan=2, colspan=6)
+    price_ax = plt.subplot2grid(shape, (2, 0), rowspan=2, colspan=6, sharex=net_worth_ax)
+    plt.subplots_adjust(wspace=0.2, hspace=0.2)
+    asset_held_ax = plt.subplot2grid(shape, (4, 0), rowspan=2, colspan=6, sharex=net_worth_ax)
+
+    net_worths = info_list.get('net_worths')
+    prices = info_list.get('current_price')
+    asset_held = info_list.get('asset_held')
+    times = info_list['times']
+
+    # plotting networth/asset-held
+    for i in range(net_worths.shape[1]):
+        y_points = np.trim_zeros(net_worths[:, i], 'b')
+        x_points = times[0:len(y_points)]
+        label = f'Net Worth of RL agent for {net_worths.shape[1]} episodes' if i == 0 else ""
+        net_worth_ax.plot(
+            x_points, y_points,
+            label=label, color=NETWORTH_COLOR
+        )
+    asset_held_ax.plot(times, asset_held[:, 0], label=f'Asset held for episode 1', color=ASSET_HELD_COLOR)
+    asset_held_ax.legend(loc=3, ncol=2, prop={'size': 10})
+    formatter = EngFormatter(unit=' USDT', sep="")
+    net_worth_ax.yaxis.set_major_formatter(formatter)
+
+    # plotting benchmarks
+    for i, benchmark in enumerate(benchmarks):
+        y_points = np.trim_zeros(benchmark.net_worths, 'b')
+        x_points = times[0:len(y_points)]
+        label = f'{benchmark.get_label()} Benchmark'
+        net_worth_ax.plot(
+            x_points, y_points,
+            label=label, color=BENCHMARKS_COLORS[i % len(BENCHMARKS_COLORS)]
+        )
+    net_worth_ax.legend(loc=3, ncol=2, prop={'size': 10})
+
+    # plotting prices
+    y_points = np.trim_zeros(prices, 'b')
+    x_points = times[0:len(y_points)]
+    price_ax.plot(x_points, y_points, label=f"Asset price", color="black")
+    price_ax.legend(loc=3, ncol=2, prop={'size': 10})
+    price_ax.xaxis.set_major_formatter(mdates.DateFormatter('%m/%d/%Y'))
+
+    # fixing view
+    plt.setp(net_worth_ax.get_xticklabels(), visible=False)
+    plt.setp(price_ax.get_xticklabels(), visible=False)
+    # net_worth_ax.set_ylim(np.amin(net_worths) / 1.1, np.amax(net_worths) * 1.1)
+
+    # suptile information's
+    last_networth = []
+    for i in range(net_worths.shape[1]):
+        last_networth.append(np.trim_zeros(net_worths[:, i], 'b')[-1])
+    min_networth = round(np.amin(last_networth), 2)
+    max_networth = round(np.amax(last_networth), 2)
+    avg_networth = round(np.average(last_networth), 2)
+    initial_networth = net_worths[0, 0]
+    profit = round((avg_networth - initial_networth) / initial_networth * 100, 2)
+    plt.suptitle(
+        f'min networth: {min_networth}| max networth: {max_networth}| avg networth: {avg_networth}| profit {profit}%',
+        size=16
+    )
+
+    # showing & saving figure
+    fig.tight_layout(rect=[0, 0.03, 1, 0.98])
+    if show_figure:
+        fig.show()
+    if save_to:
+        fig.savefig(save_to)
+
+
 def fix_data_path(args):
     if not args.data:
         args.data = DATA_PATH
     elif not args.data.startswith('/'):
-        args.data = os.path.join(path, args.data)
+        args.data = os.path.join(PATH, args.data)

@@ -8,12 +8,12 @@ from trader.env.strategy.simulated_strategy import SimulatedStrategy
 from trader.env.trading_env import TradingEnv
 from stable_baselines3.common.env_checker import check_env
 
-data_provider = SimulatedDataProvider(
-    csv_data_path='dataset/binance-BTCUSDT-1h.csv',
-    window_size=10,
-    max_ep_len=6000,
-    add_indicators=True,
-)
+# data_provider = SimulatedDataProvider(
+#     csv_data_path='dataset/binance-BTCUSDT-1h.csv',
+#     window_size=10,
+#     # max_ep_len=6000,
+#     add_indicators=True,
+# )
 
 # env = TradingEnv(
 #     data_provider=data_provider,
@@ -41,19 +41,21 @@ obs = env.reset()
 done = False
 times = []
 i = 0
-while not done and i< 10:
+while not done and i< 10000:
     tic = time.time()
     action = env.sample_action()
     obs, reward, done, info = env.step(action)
     toc = time.time()
     times.append(toc - tic)
-    env.render()
+    # env.render()
     i += 1
-    print(f'\n\n\nobs => {env.current_observation}')
+    # print(f'\n\n\nobs => {env.current_observation}')
     # print(f'\nobs => {obs[-10:]}')
-    print(f'account history => \n{env.account_history}')
+    # print(f'account history => \n{env.account_history}')
     print(f'reward => {reward}\n')
     # time.sleep(2)
+
+print(f'\n\nepisode len => {i}')
 
 # check_env(env)
 

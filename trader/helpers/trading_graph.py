@@ -36,7 +36,6 @@ class TradingGraph:
 
         # balance and asset held subplot
         self.balance = plt.subplot2grid(shape, (0, 5), rowspan=6, colspan=1)
-        # self.asset_held = plt.subplot2grid(shape, (0, 5), rowspan=6, colspan=1)
 
         # Add padding to make graph easier to view
         plt.subplots_adjust(left=0.11, bottom=0.24, right=0.90, top=0.90, wspace=0.2, hspace=0)
@@ -55,7 +54,7 @@ class TradingGraph:
         self._render_benchmarks(step_range, times, benchmarks)
 
         # Show legend, which uses the label we defined for the plot above
-        self.net_worth_ax.legend()
+        # self.net_worth_ax.legend()
         legend = self.net_worth_ax.legend(loc=2, ncol=2, prop={'size': 8})
         legend.get_frame().set_alpha(0.4)
 
@@ -169,7 +168,7 @@ class TradingGraph:
         self._render_price(step_range, times, current_step)
         self._render_volume(step_range, times)
         self._render_trades(step_range, trades)
-        self._render_balance(step_range, current_step,balance, asset_held)
+        self._render_balance(step_range, current_step, balance, asset_held)
 
         date_col = pd.to_datetime(self.df['Date'], unit='s').dt.strftime('%m/%d/%Y %H:%M')
         date_labels = date_col.values[step_range]

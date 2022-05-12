@@ -32,7 +32,7 @@ class RayOptimizer:
             'train': True,
             'initial_balance': DEFAULT_INITIAL_BALANCE,
             'commission_percent': DEFAULT_COMMISSION_PERCENT,
-            'window_size': DEFAULT_WINDOW_SIZE,
+            'window_size': DEFAULT_WINDOW_SIZE if not use_lstm else 1,
             'max_ep_len': MAX_EP_LENGTH,
             'use_lstm': use_lstm,
         }
@@ -42,16 +42,15 @@ class RayOptimizer:
         self.model_conf = {
             # "fcnet_hiddens": FC_SIZE,  # Hyperparameter grid search defined above
             "use_lstm": use_lstm,
-            "lstm_cell_size": 256,
+            "lstm_cell_size": 256 if use_lstm else None,
         }
 
         self.config: TrainerConfigDict = {
             "env": "TradingEnv",
-            "env_config": self.env_train_config,  # The dictionary we built before
+            "env_config": self.env_train_config,  # The dictionary of environment config
             "log_level": "WARNING",
             "framework": "torch",
             "ignore_worker_failures": True,
-            # One worker per agent. You can increase this but it will run fewer parallel trainings.
             "num_workers": 11,
             "num_envs_per_worker": 1,
             # "evaluation_num_workers": 1,
@@ -73,12 +72,14 @@ class RayOptimizer:
 
         self.test_config = {
             "env": "TradingEnv",
+            "env_config": self.env_test_config,
+            "log_level": "WARNING",
             "framework": "torch",
             "num_workers": 0,
-            "env_config": self.env_test_config,
             "evaluation_num_workers": 1,
             "in_evaluation": True,
             "clip_rewards": True,
+            "observation_filter": "MeanStdFilter",
             "model": self.model_conf,
             "evaluation_config": {
                 "mode": "test"
@@ -98,17 +99,54 @@ class RayOptimizer:
             resume=resume,
         )
 
-    def test(self, checkpoint: str, test_steps=TEST_STEPS, render=False):
+    def test(self, checkpoint: str, render=False, nb_episodes=1):
         trainer = self._get_agent()
         if checkpoint is not None:
             trainer.restore(checkpoint)
         env = create_env(self.env_test_config)
+
+        if render:
+            nb_episodes = 1
+
+        info_list = {
+            'net_worths': None,
+            'asset_held': None,
+            'current_price': None,
+        }
+        episode_timesteps = env.data_provider.ep_timesteps()
+        episode_max_len = len(episode_timesteps)
+
+        for i in range(nb_episodes):
+            info = self._test_episode(env, trainer, render)
+            if info.shape[0] != episode_max_len:
+                # episode ended with early stop
+                info = np.append(info, [
+                    [0., 0., 0.] for _ in range(episode_max_len - info.shape[0])
+                ], axis=0)
+            if info_list['net_worths'] is None:
+                info_list['net_worths'] = info[:, 0:1]
+            else:
+                info_list['net_worths'] = np.append(info_list['net_worths'], info[:, 0:1], axis=1)
+
+            if info_list['asset_held'] is None:
+                info_list['asset_held'] = info[:, 2:3]
+            else:
+                info_list['asset_held'] = np.append(info_list['asset_held'], info[:, 2:3], axis=1)
+
+            if info_list.get('current_price') is None:
+                info_list['current_price'] = info[:, 1]
+
+        info_list['times'] = episode_timesteps['Date'].values
+
+        return info_list, env.benchmarks
+
+    def _test_episode(self, env, trainer, render):
+        episode_max_len = len(env.data_provider.ep_timesteps())
         done = False
-        obs = env.reset()
-        step = 0
         info_list = None
         state_init = [np.zeros(256, np.float32) for _ in range(2)]
-        while not done and step < test_steps:
+        obs = env.reset()
+        while not done:
             if self.use_lstm:
                 action, state_init, logits = trainer.compute_single_action(obs, state=state_init)
             else:
@@ -124,7 +162,6 @@ class RayOptimizer:
                 ]], axis=0)
             if render:
                 env.render()
-            step += 1
         return info_list
 
     def _get_agent(self) -> Trainer:
