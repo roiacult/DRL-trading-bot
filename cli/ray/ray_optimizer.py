@@ -48,6 +48,9 @@ class RayOptimizer:
         self.config: TrainerConfigDict = {
             "env": "TradingEnv",
             "env_config": self.env_train_config,  # The dictionary of environment config
+            "horizon": MAX_EP_LENGTH,
+            "soft_horizon": True,
+            "no_done_at_end": False,
             "log_level": "WARNING",
             "framework": "torch",
             "ignore_worker_failures": True,
@@ -120,9 +123,7 @@ class RayOptimizer:
             info = self._test_episode(env, trainer, render)
             if info.shape[0] != episode_max_len:
                 # episode ended with early stop
-                info = np.append(info, [
-                    [0., 0., 0.] for _ in range(episode_max_len - info.shape[0])
-                ], axis=0)
+                info = np.append(info, np.zeros((episode_max_len - info.shape[0], 3)), axis=0)
             if info_list['net_worths'] is None:
                 info_list['net_worths'] = info[:, 0:1]
             else:
@@ -141,7 +142,6 @@ class RayOptimizer:
         return info_list, env.benchmarks
 
     def _test_episode(self, env, trainer, render):
-        episode_max_len = len(env.data_provider.ep_timesteps())
         done = False
         info_list = None
         state_init = [np.zeros(256, np.float32) for _ in range(2)]

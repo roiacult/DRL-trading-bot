@@ -54,7 +54,8 @@ def run_ray_tester():
     args = parser.parse_args()
     fix_data_path(args)
 
-    ray.init(num_cpus=12, num_gpus=1)
+    if not ray.is_initialized():
+        ray.init(num_cpus=12, num_gpus=1)
 
     register_env("TradingEnv", create_env)
 

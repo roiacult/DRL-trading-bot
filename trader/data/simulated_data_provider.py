@@ -50,14 +50,16 @@ class SimulatedDataProvider(DataProvider):
     def reset(self, ) -> int:
         # initialize initial step to a random value if this provider is for
         # training environment otherwise initialize it to self.window_size
-        self.initial_timestep = int(np.random.uniform(
-            self.window_size - 1, len(self.data_frame) - self.max_ep_len
-        )) if not self.test else self.window_size - 1
+        # self.initial_timestep = int(np.random.uniform(
+        #     self.window_size - 1, len(self.data_frame) - self.max_ep_len
+        # )) if not self.test else self.window_size - 1
+        self.initial_timestep = self.window_size - 1
         self.timestep_index = self.initial_timestep
         return self.initial_timestep
 
     def has_next_timestep(self) -> bool:
-        is_max_len = (self.timestep_index - self.initial_timestep) >= self.max_ep_len
+        # is_max_len = (self.timestep_index - self.initial_timestep) >= self.max_ep_len
+        is_max_len = False
         is_last_index = self.timestep_index >= len(self.data_frame)
 
         if self.test:
@@ -72,7 +74,7 @@ class SimulatedDataProvider(DataProvider):
 
         return frame
 
-    def split_data(self, train_split_percentage: float = 0.8) -> Tuple[DataProvider, DataProvider]:
+    def split_data(self, train_split_percentage: float = 0.7) -> Tuple[DataProvider, DataProvider]:
         train_len = int(train_split_percentage * len(self.data_frame))
 
         train_df = self.data_frame[:train_len].copy()
@@ -89,10 +91,11 @@ class SimulatedDataProvider(DataProvider):
         return self.data_frame
 
     def ep_timesteps(self) -> pd.DataFrame:
-        if self.test:
-            return self.data_frame.iloc[self.initial_timestep::]
-        else:
-            return self.data_frame.iloc[self.initial_timestep:self.initial_timestep + self.max_ep_len]
+        # if self.test:
+        #     return self.data_frame.iloc[self.initial_timestep::]
+        # else:
+        #     return self.data_frame.iloc[self.initial_timestep:self.initial_timestep + self.max_ep_len]
+        return self.data_frame.iloc[self.initial_timestep::]
 
     def seed(self, seed: int = None):
         super().seed(seed)

@@ -122,7 +122,7 @@ class DataProvider(object, metaclass=ABCMeta):
         raise NotImplementedError
 
     @abstractmethod
-    def split_data(self, train_split_percentage: float = 0.8) -> Tuple:
+    def split_data(self, train_split_percentage: float = 0.7) -> Tuple:
         """
         split dataset to train/test datasets
         :param train_split_percentage: percentage of the training data

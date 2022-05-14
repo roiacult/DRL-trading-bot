@@ -25,7 +25,7 @@ class LiveDataProvider(DataProvider):
     def next_timestep(self) -> pd.DataFrame:
         raise NotImplementedError
 
-    def split_data(self, train_split_percentage: float = 0.8) -> Tuple:
+    def split_data(self, train_split_percentage: float = 0.7) -> Tuple:
         raise NotImplementedError
 
     def all_timesteps(self) -> pd.DataFrame:

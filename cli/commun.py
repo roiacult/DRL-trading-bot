@@ -243,10 +243,10 @@ def ray_plot_test_results(
 
     # showing & saving figure
     fig.tight_layout(rect=[0, 0.03, 1, 0.98])
-    if show_figure:
-        fig.show()
     if save_to:
         fig.savefig(save_to)
+    if show_figure:
+        plt.show()
 
 
 def fix_data_path(args):
