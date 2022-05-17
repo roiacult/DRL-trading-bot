@@ -1,0 +1,8 @@
+torch
+gym
+pandas
+ray[default,rllib,tune]
+stable_baselines3
+ta
+empyrical
+colorlog
