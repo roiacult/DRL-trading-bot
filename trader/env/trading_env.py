@@ -13,8 +13,10 @@ from trader.env.strategy.simulated_strategy import SimulatedStrategy
 from trader.helpers.logger import init_logger
 from trader.helpers.trading_graph import TradingGraph
 from trader.helpers.vars import *
+import warnings
 
 np.seterr(invalid='ignore')
+warnings.filterwarnings('ignore')
 
 
 class TradingEnvAction(Enum):
