@@ -14,7 +14,7 @@ from trader.env.benchmarks.buy_and_hold import BuyAndHold
 from trader.env.benchmarks.sma_crossover import SmaCrossover
 from trader.env.benchmarks.rsi_divergence import RsiDivergence
 from trader.env.reward.incremental_profit_reward import IncrementalProfitReward
-from trader.env.reward.risk_ratio_reward import RiskRatioReward
+from trader.env.reward.risk_ratio_reward import RiskRatioReward, RiskAdjustedReturns
 from trader.env.reward.simple_profit_reward import SimpleProfitReward
 from trader.env.reward.weighted_unrealized_pnl_reward import WeightedUnrealizedPnlReward
 from trader.env.strategy.simulated_strategy import SimulatedStrategy
@@ -89,10 +89,7 @@ def create_env(config):
 
     :return: TradingEnv
     """
-    if config.get('use_lstm', False):
-        window_size = 1
-    else:
-        window_size = config.get('window_size', DEFAULT_WINDOW_SIZE)
+    window_size = config.get('window_size', DEFAULT_WINDOW_SIZE)
 
     train_provider, test_provider = SimulatedDataProvider(
         csv_data_path=config.get('data', None),
@@ -105,24 +102,21 @@ def create_env(config):
 
     # selecting reward function
     if config.get('reward', None) == 'incremental':
-        # TODO: Deprecated
-        Reward = IncrementalProfitReward
-        reward_kwargs = {}
+        raise Exception('Deprecated reward: please use simple_profit instead')
     elif config.get('reward', None) == 'weighted_unrealized_pnl':
         Reward = WeightedUnrealizedPnlReward
         reward_kwargs = {}
     elif config.get('reward', None) == 'sharp':
-        Reward = RiskRatioReward
-        reward_kwargs = dict(ratio='sharp')
+        Reward = RiskAdjustedReturns
+        reward_kwargs = dict(ratio='sharp', window_size=window_size)
     elif config.get('reward', None) == 'sortino':
-        Reward = RiskRatioReward
-        reward_kwargs = dict(ratio='sortino')
+        Reward = RiskAdjustedReturns
+        reward_kwargs = dict(ratio='sortino', window_size=window_size)
     elif config.get('reward', None) == 'calmar':
-        Reward = RiskRatioReward
-        reward_kwargs = dict(ratio='calmar')
+        raise Exception('Deprecated reward: please use either sharp or sortino ratio')
     elif config.get('reward', None) == 'simple_profit':
         Reward = SimpleProfitReward
-        reward_kwargs = dict(window_size=train_provider.window_size)
+        reward_kwargs = dict(window_size=window_size)
     else:
         # default reward function
         Reward = SimpleProfitReward

@@ -74,7 +74,7 @@ class SimulatedDataProvider(DataProvider):
 
         return frame
 
-    def split_data(self, train_split_percentage: float = 0.7) -> Tuple[DataProvider, DataProvider]:
+    def split_data(self, train_split_percentage: float = 0.5) -> Tuple[DataProvider, DataProvider]:
         train_len = int(train_split_percentage * len(self.data_frame))
 
         train_df = self.data_frame[:train_len].copy()
