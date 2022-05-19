@@ -56,7 +56,12 @@ class BinanceFetcher(DataFetcher):
         assert period in self.KLINES
         if prefix != '' and not prefix.startswith('-'):
             prefix = f'-{prefix}'
-        file_path = os.path.join(save_to, f'binance-{symbol}-{period}{prefix}.csv')
+
+        start_datetime = datetime.datetime.strptime(start_date, "%Y-%m-%d")
+        end_datetime = datetime.datetime.strptime(end_date, "%Y-%m-%d")
+
+        date_prefix = f"{start_datetime.strftime('%Y-%m')}__{end_datetime.strftime('%Y-%m')}"
+        file_path = os.path.join(save_to, f'binance-{symbol}-{period}-{date_prefix}{prefix}.csv')
         history = self.binance_client.get_historical_klines(symbol, period, start_str=start_date, end_str=end_date)
         data_df = pd.DataFrame(history, columns=self.ALL_COLUMNS)
         data_df = data_df[self.COLUMNS]
