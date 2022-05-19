@@ -119,5 +119,4 @@ class RiskAdjustedReturns(BaseReward):
         net_worths_adj = net_worths[-(self._window_size + 1):]
         returns = pd.Series(net_worths_adj).pct_change().dropna()
         risk_adjusted_return = self._return_algorithm(returns)
-        print(f'- {self.algorithm} => {risk_adjusted_return}')
         return risk_adjusted_return
