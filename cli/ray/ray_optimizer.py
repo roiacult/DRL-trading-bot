@@ -57,7 +57,7 @@ class RayOptimizer:
             "num_workers": 11,
             "num_envs_per_worker": 1,
             # "evaluation_num_workers": 1,
-            "num_gpus": 1,
+            "num_gpus": 0,
             "clip_rewards": True,
             # "lr": LEARNING_RATE,  # Hyperparameter grid search defined above
             # This can have a big impact on the result and needs to be properly tuned (range is 0 to 1)

@@ -55,7 +55,7 @@ def run_ray_tester():
     fix_data_path(args)
 
     if not ray.is_initialized():
-        ray.init(num_cpus=12, num_gpus=1)
+        ray.init(num_cpus=0, num_gpus=1, dashboard_host='0.0.0.0')
 
     register_env("TradingEnv", create_env)
 
