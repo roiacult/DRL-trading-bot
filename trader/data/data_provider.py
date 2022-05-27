@@ -4,6 +4,7 @@ from abc import ABCMeta, abstractmethod
 
 import ta
 
+from trader.data.indicators import add_all_indicators
 from trader.helpers.vars import DEFAULT_WINDOW_SIZE, MAX_EP_LENGTH
 
 
@@ -34,9 +35,10 @@ class DataProvider(object, metaclass=ABCMeta):
     @abstractmethod
     def __init__(
             self, window_size: int = DEFAULT_WINDOW_SIZE, max_ep_len: int = MAX_EP_LENGTH,
-            add_indicators: bool = False, **kwargs
+            add_indicators: bool = True, **kwargs
     ):
 
+        self.timestep_index = 0
         self.add_indicators = add_indicators
         self.window_size = window_size
         self.max_ep_len = max_ep_len
@@ -66,7 +68,8 @@ class DataProvider(object, metaclass=ABCMeta):
         return formatted
 
     def _add_indicators(self, df):
-        df = ta.add_all_ta_features(df, open='Open', close='Close', high='High', low='Low', volume='Volume')
+        # df = ta.add_all_ta_features(df, open='Open', close='Close', high='High', low='Low', volume='Volume')
+        df = add_all_indicators(df, close='Close', high='High', low='Low', volume='Volume')
         all_columns = self.columns.copy()
         all_columns.extend(self.indicators_columns)
         return df[all_columns]

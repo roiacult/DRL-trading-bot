@@ -13,8 +13,6 @@ class SimulatedDataProvider(DataProvider):
     emit (Date, Open, High, Low, Close, Volume) data from historical dataset
     """
 
-    timestep_index = 0
-
     def __init__(
             self,
             data_frame: pd.DataFrame = None,

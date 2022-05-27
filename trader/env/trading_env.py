@@ -251,7 +251,6 @@ class TradingEnv(gym.Env):
                 self.benchmarks, self.trades,
                 self.balance, self.asset_held,
             )
-            print(f'balance => {self.balance}')
 
     def close(self):
         if self.viewer is not None:
