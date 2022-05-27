@@ -32,12 +32,12 @@ if __name__ == '__main__':
         exchange = BinanceFetcher(binance_secret_path=args.key)
         print('Fetching data ...')
         df = exchange.fetch_dataset(
-            save_to=args.output,
             symbol=args.symbol,
             period=args.period,
             start_date=args.start_date,
             end_date=args.end_date,
             prefix=args.prefix,
+            save_to=args.output,
         )
         print(f"Fetched {len(df)} entries of {args.symbol}")
         print(f"Period of {args.period} from {args.start_date} to {args.end_date}")

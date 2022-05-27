@@ -51,21 +51,29 @@ class BinanceFetcher(DataFetcher):
             raise ValueError(f'Not a valid file; please provide a valid path')
 
     def fetch_dataset(
-            self, save_to: str, symbol, period,
-            start_date=DATA_FETCHER_START_DATE, end_date=DATA_FETCHER_END_DATE, prefix=""):
+            self, symbol, period,
+            start_date=DATA_FETCHER_START_DATE, end_date=DATA_FETCHER_END_DATE, prefix="", save_to: str = None):
         assert period in self.KLINES
-        if prefix != '' and not prefix.startswith('-'):
-            prefix = f'-{prefix}'
 
-        start_datetime = datetime.datetime.strptime(start_date, "%Y-%m-%d")
-        end_datetime = datetime.datetime.strptime(end_date, "%Y-%m-%d")
-
-        date_prefix = f"{start_datetime.strftime('%Y-%m')}__{end_datetime.strftime('%Y-%m')}"
-        file_path = os.path.join(save_to, f'binance-{symbol}-{period}-{date_prefix}{prefix}.csv')
         history = self.binance_client.get_historical_klines(symbol, period, start_str=start_date, end_str=end_date)
         data_df = pd.DataFrame(history, columns=self.ALL_COLUMNS)
         data_df = data_df[self.COLUMNS]
-        data_df[self.DATE_COL] = pd.to_datetime(data_df[self.DATE_COL]/1000, unit='s')
-        data_df.to_csv(file_path)
-        return data_df
+        data_df[self.DATE_COL] = pd.to_datetime(data_df[self.DATE_COL] / 1000, unit='s')
+        data_df = data_df.apply(pd.to_numeric)
 
+        if save_to:
+            if prefix != '' and not prefix.startswith('-'):
+                prefix = f'-{prefix}'
+            if start_date:
+                start_datetime = datetime.datetime.strptime(start_date, "%Y-%m-%d").strftime('%Y-%m')
+            else:
+                start_datetime = ''
+
+            if end_date:
+                end_datetime = datetime.datetime.strptime(end_date, "%Y-%m-%d").strftime('%Y-%m')
+            else:
+                end_datetime = ''
+            date_prefix = f"{start_datetime}__{end_datetime}"
+            file_path = os.path.join(save_to, f'binance-{symbol}-{period}-{date_prefix}{prefix}.csv')
+            data_df.to_csv(file_path)
+        return data_df

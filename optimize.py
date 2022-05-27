@@ -2,6 +2,7 @@
 import sys
 
 from cli.commun import OPTIONS
+from cli.ray.ray_renderer import run_ray_renderer
 from cli.ray.ray_tester import run_ray_tester
 from cli.ray.ray_training import run_ray_trainer
 from cli.stable_baseine.test import run_tester
@@ -21,3 +22,5 @@ if __name__ == '__main__':
             run_ray_trainer()
         elif args[1] == OPTIONS[3]:
             run_ray_tester()
+        elif args[1] == OPTIONS[4]:
+            run_ray_renderer()

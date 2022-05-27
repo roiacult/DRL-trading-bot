@@ -103,9 +103,7 @@ class RayOptimizer:
         )
 
     def test(self, checkpoint: str, render=False, nb_episodes=1):
-        trainer = self._get_agent()
-        if checkpoint is not None:
-            trainer.restore(checkpoint)
+        trainer = self.get_agent(checkpoint)
         env = create_env(self.env_test_config)
 
         if render:
@@ -164,10 +162,13 @@ class RayOptimizer:
                 env.render()
         return info_list
 
-    def _get_agent(self) -> Trainer:
+    def get_agent(self, checkpoint: str) -> Trainer:
         # TODO: add other type of agents
         if self.algo == 'PPO':
-            return ppo.PPOTrainer(config=self.test_config)
+            trainer = ppo.PPOTrainer(config=self.test_config)
+            if checkpoint is not None:
+                trainer.restore(checkpoint)
+            return trainer
         else:
             Exception('algorithm not implemented yet')
 
