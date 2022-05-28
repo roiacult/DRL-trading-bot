@@ -9,7 +9,7 @@ from stat import *
 # from app.ga.tsp_app import TspAPP
 
 PATH = pathlib.Path(__file__).parent.resolve()
-RESULTS_PATH = os.path.join(PATH, "ray_results")
+RESULTS_PATH = os.path.join(PATH, "ray_results_deployed")
 
 BLACKLIST_FILES = ['params', 'progress', 'result', 'event', 'experiment', 'error', 'basic']
 
@@ -63,7 +63,7 @@ def get_models():
 # structures
 def path_to_dict(path):
     st = os.stat(path)
-    result = {'active': True, 'full_path': path}
+    result = {'full_path': path}
     if S_ISDIR(st.st_mode):
         result['type'] = 'd'
         if "checkpoint" not in path:

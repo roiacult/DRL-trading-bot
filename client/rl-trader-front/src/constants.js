@@ -7,3 +7,5 @@ export const THEMES = {
   ONE_DARK: 'ONE_DARK',
   UNICORN: 'UNICORN'
 };
+
+export const SERVER_URL = 'http://localhost:8000';

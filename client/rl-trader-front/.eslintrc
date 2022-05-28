@@ -5,8 +5,11 @@
     "browser": true
   },
   "extends": [
-    "airbnb/hooks",
-    "plugin:mdx/recommended"
+    "eslint:recommended",
+    "plugin:import/errors",
+    "plugin:react/recommended",
+    "plugin:jsx-a11y/recommended",
+    "prettier"
   ],
   "settings": {
     "import/resolver": {

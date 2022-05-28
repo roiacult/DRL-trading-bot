@@ -133,5 +133,6 @@ dmypy.json
 models/
 logs/
 ray_results/
+ray_results_deployed/
 ignore/
 secrets.json
