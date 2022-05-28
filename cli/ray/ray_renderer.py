@@ -4,7 +4,7 @@ from ray.tune import register_env
 
 from cli.commun import *
 from cli.ray.agent_ui import RayAgentUi
-from cli.ray.tickinter_ui import TkinterTradingView
+from cli.ray.tickinter_ui import TkinterTradingViewà
 
 
 def create_ray_test_arg_parser():
