@@ -1,6 +1,9 @@
 import numpy as np
 from ray import tune
 from ray.rllib.agents import Trainer
+from ray.rllib.agents.a3c import a2c
+from ray.rllib.agents.ddpg import ddpg
+from ray.rllib.agents.dqn import dqn
 from ray.rllib.utils.typing import TrainerConfigDict
 import ray.rllib.agents.ppo as ppo
 from ray.tune.trial import Trial
@@ -166,11 +169,17 @@ class RayOptimizer:
         # TODO: add other type of agents
         if self.algo == 'PPO':
             trainer = ppo.PPOTrainer(config=self.test_config)
-            if checkpoint is not None:
-                trainer.restore(checkpoint)
-            return trainer
+        elif self.algo == 'DQN':
+            trainer = dqn.DQNTrainer(config=self.test_config)
+        elif self.algo == 'A2C':
+            trainer = a2c.A3CTrainer(config=self.test_config)
+        elif self.algo == 'DDPG':
+            trainer = ddpg.DDPGTrainer(config=self.test_config)
         else:
-            Exception('algorithm not implemented yet')
+            raise Exception('algorithm not implemented yet')
+        if checkpoint is not None:
+            trainer.restore(checkpoint)
+        return trainer
 
     def _trail_name_creator(self, trail: Trial) -> str:
         data_name = self.data.split('/')[-1]
