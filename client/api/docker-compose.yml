@@ -7,3 +7,4 @@ services:
     restart: on-failure
     volumes:
       - ./app:/api/app
+      - ../../ray_results:/api/app/ray_results
