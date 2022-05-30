@@ -17,7 +17,7 @@ def create_ray_train_arg_parser():
 def run_ray_trainer():
     parser = create_ray_train_arg_parser()
     args = parser.parse_args()
-    fix_data_path(args)
+    fix_args_data_path(args)
 
     if not ray.is_initialized():
         ray.init(num_cpus=12, num_gpus=0, dashboard_host='0.0.0.0')

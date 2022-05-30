@@ -1,13 +1,5 @@
-import React, {
-  Suspense,
-  Fragment,
-  lazy
-} from 'react';
-import {
-  Switch,
-  Redirect,
-  Route
-} from 'react-router-dom';
+import React, { Suspense, Fragment, lazy } from 'react';
+import { Switch, Redirect, Route } from 'react-router-dom';
 import DashboardLayout from 'src/layouts/DashboardLayout';
 import DocsLayout from 'src/layouts/DocsLayout';
 import MainLayout from 'src/layouts/MainLayout';
@@ -29,12 +21,14 @@ export const renderRoutes = (routes = []) => (
             key={i}
             path={route.path}
             exact={route.exact}
-            render={(props) => (
+            render={props => (
               <Guard>
                 <Layout>
-                  {route.routes
-                    ? renderRoutes(route.routes)
-                    : <Component {...props} />}
+                  {route.routes ? (
+                    renderRoutes(route.routes)
+                  ) : (
+                    <Component {...props} />
+                  )}
                 </Layout>
               </Guard>
             )}
@@ -80,6 +74,11 @@ const routes = [
     routes: [
       {
         exact: true,
+        path: '/app/algo/:algo/:reward/:expirement/:checkpoint',
+        component: lazy(() => import('src/views/algo'))
+      },
+      {
+        exact: true,
         path: '/app/account',
         component: lazy(() => import('src/views/account/AccountView'))
       },
@@ -90,10 +89,7 @@ const routes = [
       },
       {
         exact: true,
-        path: [
-          '/app/chat/new',
-          '/app/chat/:threadKey'
-        ],
+        path: ['/app/chat/new', '/app/chat/:threadKey'],
         component: lazy(() => import('src/views/chat/ChatView'))
       },
       {
@@ -227,7 +223,9 @@ const routes = [
       {
         exact: true,
         path: '/app/reports/dashboard-alternative',
-        component: lazy(() => import('src/views/reports/DashboardAlternativeView'))
+        component: lazy(() =>
+          import('src/views/reports/DashboardAlternativeView')
+        )
       },
       {
         exact: true,

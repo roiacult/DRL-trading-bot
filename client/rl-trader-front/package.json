@@ -85,6 +85,7 @@
     "react-router": "^5.2.0",
     "react-router-dom": "^5.2.0",
     "react-scripts": "^3.4.1",
+    "react-use-websocket": "^4.2.0",
     "redux": "^4.0.5",
     "redux-devtools-extension": "^2.13.8",
     "redux-form": "^8.3.6",
@@ -104,7 +105,7 @@
     "eslint-plugin-react": "^7.20.3",
     "eslint-plugin-react-hooks": "^2.5.1",
     "mdx-loader": "^3.0.2",
-    "numeral": "^2.0.6",
+    "numeral": "2.0.4",
     "prettier": "^1.19.1",
     "typescript": "^3.9.7"
   }

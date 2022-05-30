@@ -20,7 +20,7 @@ def run_ray_renderer():
     parser = create_ray_test_arg_parser()
     args = parser.parse_args()
     register_env("TradingEnv", create_env)
-    fix_data_path(args)
+    fix_args_data_path(args)
 
     algo_folder = os.path.join(RAY_RESULTS, f'{args.algo}-{args.reward}', args.id)
     checkpoint_folder = os.path.join(algo_folder, f'checkpoint_{str(args.number).zfill(6)}')

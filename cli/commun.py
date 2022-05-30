@@ -13,8 +13,7 @@ from trader.env.benchmarks.base_benchmark import BaseBenchmark
 from trader.env.benchmarks.buy_and_hold import BuyAndHold
 from trader.env.benchmarks.sma_crossover import SmaCrossover
 from trader.env.benchmarks.rsi_divergence import RsiDivergence
-from trader.env.reward.incremental_profit_reward import IncrementalProfitReward
-from trader.env.reward.risk_ratio_reward import RiskRatioReward, RiskAdjustedReturns
+from trader.env.reward.risk_ratio_reward import RiskAdjustedReturns
 from trader.env.reward.simple_profit_reward import SimpleProfitReward
 from trader.env.reward.weighted_unrealized_pnl_reward import WeightedUnrealizedPnlReward
 from trader.env.strategy.simulated_strategy import SimulatedStrategy
@@ -243,8 +242,14 @@ def ray_plot_test_results(
         plt.show()
 
 
-def fix_data_path(args):
-    if not args.data:
-        args.data = DATA_PATH
-    elif not args.data.startswith('/'):
-        args.data = os.path.join(PATH, args.data)
+def fix_args_data_path(args):
+    args.data = fix_data_path(args.data)
+
+
+def fix_data_path(path):
+    if not path:
+        return DATA_PATH
+    elif not path.startswith('/'):
+        return os.path.join(PATH, path)
+
+    return path

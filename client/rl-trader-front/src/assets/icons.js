@@ -1,10 +1,10 @@
 import React from 'react';
 
-export const BitCoinIcon = () => (
+export const BitCoinIcon = ({ size = 25 }) => (
   <svg
     xmlns="http://www.w3.org/2000/svg"
-    width="25"
-    height="25"
+    width={size}
+    height={size}
     version="1.1"
     shapeRendering="geometricPrecision"
     textRendering="geometricPrecision"
@@ -32,10 +32,10 @@ export const BitCoinIcon = () => (
   </svg>
 );
 
-export const EthCoinIcon = () => (
+export const EthCoinIcon = ({ size = 25 }) => (
   <svg
-    width="25"
-    height="25"
+    width={size}
+    height={size}
     version="1.1"
     shapeRendering="geometricPrecision"
     textRendering="geometricPrecision"
@@ -85,10 +85,10 @@ export const EthCoinIcon = () => (
   </svg>
 );
 
-export const BnbCoinIcon = () => (
+export const BnbCoinIcon = ({ size = 25 }) => (
   <svg
-    width="25"
-    height="25"
+    width={size}
+    height={size}
     version="1.1"
     id="Layer_1"
     x="0px"
@@ -129,10 +129,10 @@ export const BnbCoinIcon = () => (
   </svg>
 );
 
-export const AdaCoinIcon = () => (
+export const AdaCoinIcon = ({ size = 25 }) => (
   <svg
-    width="25"
-    height="25"
+    width={size}
+    height={size}
     version="1.1"
     id="Layer_1"
     x="0px"
@@ -296,3 +296,15 @@ export const AdaCoinIcon = () => (
     </g>
   </svg>
 );
+
+export const coinIcon = name => {
+  if (name.includes('ADA')) {
+    return AdaCoinIcon;
+  } else if (name.includes('BTC')) {
+    return BitCoinIcon;
+  } else if (name.includes('BNB')) {
+    return BnbCoinIcon;
+  } else if (name.includes('ETH')) {
+    return EthCoinIcon;
+  }
+};
