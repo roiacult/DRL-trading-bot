@@ -41,6 +41,23 @@ const AlgoView = ({
 
   // console.log('last message =>', lastMessage);
 
+  const sendNextRequest = () => {
+    // console.log('sending next request', socket != null);
+    sendJsonMessage({
+      next: true,
+      price_period: pricesPeriod
+    });
+  };
+
+  const sendStartRequest = () => {
+    // console.log('sending next request', socket != null);
+    sendJsonMessage({
+      start: true,
+      price_period: pricesPeriod
+    });
+    setStarting(true);
+  };
+
   useEffect(() => {
     // console.log('last message =>', lastMessage);
 
@@ -63,12 +80,16 @@ const AlgoView = ({
           console.log('recived next', data);
           setData(data);
           if (!paused) setTimeout(sendNextRequest, 1000);
+          break;
+        default:
+          break;
       }
     }
-  }, [lastMessage]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [lastMessage, sendNextRequest]);
 
   useEffect(() => {
-    if (readyState == ReadyState.CONNECTING) {
+    if (readyState === ReadyState.CONNECTING) {
       sendJsonMessage({
         deploy: true,
         algo,
@@ -77,26 +98,9 @@ const AlgoView = ({
         checkpoint
       });
     }
-  }, [readyState]);
+  }, [readyState, sendJsonMessage, algo, reward, expirement, checkpoint]);
 
   // console.log('data => ', data);
-
-  const sendNextRequest = () => {
-    // console.log('sending next request', socket != null);
-    sendJsonMessage({
-      next: true,
-      price_period: pricesPeriod
-    });
-  };
-
-  const sendStartRequest = () => {
-    // console.log('sending next request', socket != null);
-    sendJsonMessage({
-      start: true,
-      price_period: pricesPeriod
-    });
-    setStarting(true);
-  };
 
   const startSocket = useCallback(() => {
     setSocket(SOCKET_URL + '/deploy_ws');
