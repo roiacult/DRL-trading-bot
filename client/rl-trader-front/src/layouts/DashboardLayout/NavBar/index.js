@@ -162,7 +162,7 @@ const NavBar = ({ openMobile }) => {
   const fetchModels = async () => {
     setLoading(true);
     try {
-      const response = await API.get('/models');
+      const response = await API.get('/api/models');
       setItems(mapStructures(response.data));
     } catch (e) {
       setFailure(e);

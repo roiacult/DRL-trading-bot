@@ -37,7 +37,7 @@ def get_application():
 app = get_application()
 
 
-@app.websocket("/deploy_ws")
+@app.websocket("/api/deploy_ws")
 async def websocket_endpoint(websocket: WebSocket):
     await websocket.accept()
     await websocket.send_json({'status': 'success', 'action': 'connected'})
@@ -73,7 +73,7 @@ async def websocket_endpoint(websocket: WebSocket):
         assets_held = [asset_held*current_price]
         balances = [balance]
         label = np.datetime_as_string(df['Date'].values[current_step], unit='m')
-        print(f'started {benchmarks}', flush=True)
+        # print(f'started {benchmarks}', flush=True)
         await websocket.send_json({
             'status': 'sucess',
             'action': 'start',
@@ -127,7 +127,7 @@ async def websocket_endpoint(websocket: WebSocket):
             ray_deployment.disconnect()
 
 
-@app.get("/models")
+@app.get("/api/models")
 def get_models():
     # get list of folders and models
     file_structures = path_to_dict(RESULTS_PATH)

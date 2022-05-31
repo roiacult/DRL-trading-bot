@@ -105,7 +105,7 @@ const AlgoView = ({
   // console.log('data => ', data);
 
   const startSocket = useCallback(() => {
-    setSocket(SOCKET_URL + '/deploy_ws');
+    setSocket(SOCKET_URL + '/api/deploy_ws');
   }, []);
 
   const deploy = () => {

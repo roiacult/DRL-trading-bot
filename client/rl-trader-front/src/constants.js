@@ -8,5 +8,8 @@ export const THEMES = {
   UNICORN: 'UNICORN'
 };
 
-export const SERVER_URL = 'http://localhost:8000';
-export const SOCKET_URL = 'ws://localhost:8000';
+
+const LOCATION = process.env.NODE_ENV === "development" ? 'localhost:8000' : window.location.hostname;
+
+export const SERVER_URL = `http://${LOCATION}`;
+export const SOCKET_URL = `ws://${LOCATION}`;

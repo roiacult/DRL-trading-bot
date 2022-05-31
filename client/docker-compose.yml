@@ -1,0 +1,37 @@
+version: '3.9'
+services:
+  drl-api-service:
+    build: api
+#    ports:
+#      - "8000:8000"
+    restart: on-failure
+    volumes:
+      - ../ray_results_deployed:/api/app/ray_results
+      - ../trader:/api/app/trader
+      - ../cli:/api/app/cli
+      - ../dataset:/api/app/dataset
+    networks:
+      - rl-trader-network
+
+  drl-front-service:
+    build: rl-trader-front
+#    ports:
+#      - "3000:3000"
+    restart: on-failure
+    networks:
+      - rl-trader-network
+  nginxbackend:
+    image: nginx:alpine
+    ports:
+      - "80:80"
+    volumes:
+      - ./nginx:/etc/nginx/conf.d
+    depends_on:
+      - drl-api-service
+      - drl-front-service
+    networks:
+      - rl-trader-network
+    restart: on-failure
+
+networks:
+  rl-trader-network:
