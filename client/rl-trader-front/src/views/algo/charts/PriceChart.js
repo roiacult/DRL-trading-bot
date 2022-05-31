@@ -121,16 +121,10 @@ const PriceChart = ({ className, data: dataProp, label, color, ...rest }) => {
             padding: 20,
             fontColor: theme.palette.text.secondary,
             beginAtZero: false,
-            // maxTicksLimit: 7,
-            // callback: (value, index, values) => {
-            //   const step = parseInt(values.length / PRICES_TO_SHOW);
-            //   console.log(step);
-            //   console.log(values);
-            //   if (index % step === 0) {
-            //     return `${value}$`;
-            //   }
-            // }
-            callback: value => (value > 0 ? `${value}$` : value)
+            callback: value =>
+              value > 0.5
+                ? numeral(value).format('$0,0')
+                : numeral(0).format('$0,0')
           }
         }
       ]

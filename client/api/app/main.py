@@ -16,6 +16,7 @@ RESULTS_PATH = os.path.join(PATH, "ray_results")
 
 BLACKLIST_FILES = ['params', 'progress', 'result', 'event', 'experiment', 'error', 'basic']
 LOOKBACK_WINDOW = 40
+ASSET_BALANCE_WINDOW = 10
 
 
 # fast api functions
@@ -68,14 +69,17 @@ async def websocket_endpoint(websocket: WebSocket):
             start = message and message.get('start', False)
 
         current_step, net_worths, benchmarks, trades, balance, asset_held = ray_deployment.start()
+        current_price = float(df.iloc[current_step]['Close'])
+        assets_held = [asset_held*current_price]
+        balances = [balance]
         label = np.datetime_as_string(df['Date'].values[current_step], unit='m')
         print(f'started {benchmarks}', flush=True)
         await websocket.send_json({
             'status': 'sucess',
             'action': 'start',
             'net_worth': net_worths,
-            'balance': balance,
-            'asset_held': asset_held,
+            'balances': balances,
+            'assets_held': assets_held,
             'window_start': 0,
             'labels': [label],
             'prices': [float(df.iloc[current_step]['Close'])],
@@ -88,11 +92,19 @@ async def websocket_endpoint(websocket: WebSocket):
             if message and message.get('next', False):
                 current_step, net_worths, benchmarks, trades, balance, asset_held = ray_deployment.next_action()
 
+                current_price = float(df.iloc[current_step]['Close'])
+
+                assets_held.append(asset_held*current_price)
+                balances.append(balance)
+
                 prices_period = message.get('price_period', LOOKBACK_WINDOW)
 
                 window_start = max(current_step - prices_period, 0)
                 data_range = range(window_start, current_step + 1)
                 data_slice = slice(window_start, current_step + 1)
+
+                asset_start = max(current_step - ASSET_BALANCE_WINDOW, 0)
+                asset_slice = slice(asset_start, current_step + 1)
 
                 labels = np.datetime_as_string(df['Date'].values[data_slice], unit='m').tolist()
                 net_worths = net_worths[data_slice]
@@ -103,8 +115,8 @@ async def websocket_endpoint(websocket: WebSocket):
                     'status': 'success',
                     'action': 'next',
                     'net_worth': net_worths,
-                    'balance': balance,
-                    'asset_held': asset_held,
+                    'balances': balances[asset_slice],
+                    'assets_held': assets_held[asset_slice],
                     'window_start': window_start,
                     'labels': labels,
                     'prices': df.iloc[data_slice]['Close'].tolist(),

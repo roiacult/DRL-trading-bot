@@ -15,6 +15,8 @@ const useStyles = makeStyles(theme => ({
   }
 }));
 
+const WAIT_TIME = 1000;
+
 const AlgoView = ({
   match: {
     params: { algo, reward, expirement, checkpoint }
@@ -28,6 +30,7 @@ const AlgoView = ({
   const [starting, setStarting] = useState(false);
   const [started, setStarted] = useState(false);
   const [paused, setPaused] = useState(false);
+  const [simulationSpeed, setSimulationSpeed] = useState(WAIT_TIME);
 
   const [pricesPeriod, setPricesPeriod] = useState(48);
 
@@ -79,14 +82,13 @@ const AlgoView = ({
         case 'next':
           console.log('recived next', data);
           setData(data);
-          if (!paused) setTimeout(sendNextRequest, 1000);
+          if (!paused) setTimeout(sendNextRequest, simulationSpeed);
           break;
         default:
           break;
       }
     }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [lastMessage, sendNextRequest]);
+  }, [lastMessage]);
 
   useEffect(() => {
     if (readyState === ReadyState.CONNECTING) {
@@ -98,7 +100,7 @@ const AlgoView = ({
         checkpoint
       });
     }
-  }, [readyState, sendJsonMessage, algo, reward, expirement, checkpoint]);
+  }, [readyState]);
 
   // console.log('data => ', data);
 
@@ -144,10 +146,12 @@ const AlgoView = ({
           started={started}
           starting={starting}
           paused={paused}
+          simulationSpeed={simulationSpeed}
+          setSimulationSpeed={setSimulationSpeed}
           networths={data ? data.net_worth : []}
           labels={data ? data.labels : []}
-          assetHeld={data ? data.asset_held : 0}
-          balance={data ? data.balance : 0}
+          assetsHeld={data ? data.assets_held : []}
+          balances={data ? data.balances : []}
           prices={data ? data.prices : []}
           trades={data ? data.trades : []}
           windowStart={data ? data.window_start : 0}

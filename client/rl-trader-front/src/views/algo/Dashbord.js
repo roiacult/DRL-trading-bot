@@ -13,6 +13,7 @@ import {
   Grid,
   Link,
   makeStyles,
+  Slider,
   Typography,
   useTheme
 } from '@material-ui/core';
@@ -29,6 +30,7 @@ import { PlayArrow } from '@material-ui/icons';
 import PauseIcon from '@material-ui/icons/Pause';
 import NetworthChart from './charts/NetworthChart';
 import GraphOptions from './charts/GraphOptions';
+import AssetBalanceChart from './charts/AssetBalanceChart';
 // const FAKE_DATA = {
 //   values: [
 //     127.07,
@@ -144,8 +146,16 @@ const useStyles = makeStyles(theme => ({
   },
   chart: {
     height: '100%'
+  },
+  controllerContainer: {
+    display: 'flex',
+    justifyContent: 'center',
+    alignItems: 'center'
   }
 }));
+
+const MAX_SPEED = 100;
+const MIN_SPEED = 2000;
 
 const DashboardView = ({
   expirement,
@@ -158,10 +168,12 @@ const DashboardView = ({
   starting,
   paused,
   setPricesPeriod,
+  simulationSpeed,
+  setSimulationSpeed,
   networths = [],
   labels = [],
-  assetHeld = 0,
-  balance = 0,
+  assetsHeld = [],
+  balances = [],
   prices = [],
   trades = [],
   windowStart = 0
@@ -179,6 +191,11 @@ const DashboardView = ({
 
   const currentPrice =
     prices && prices.length > 0 ? prices[prices.length - 1] : 0;
+
+  const assetHeld =
+    assetsHeld && assetsHeld.length > 1 ? assetsHeld[assetsHeld.length - 1] : 0;
+  const balance =
+    balances && balances.length > 1 ? balances[balances.length - 1] : 0;
 
   //   const difference =
   // networths && networths.length > 0
@@ -207,33 +224,60 @@ const DashboardView = ({
             {expirement + ' ' + checkpoint}
           </Typography>
         </Grid>
-        <Grid item>
-          {!started ? (
-            <Button
-              variant="outlined"
-              color="primary"
-              onClick={onStart}
-              disabled={starting}
-              startIcon={
-                starting && <CircularProgress size={24} color="inherit" />
+        <Grid item className={classes.controllerContainer}>
+          <Box>
+            <Typography id="discrete-slider" gutterBottom>
+              Simulation speed
+            </Typography>
+
+            <Slider
+              width={300}
+              style={{ width: '20rem' }}
+              aria-labelledby="discrete-slider"
+              valueLabelDisplay="auto"
+              valueLabelFormat={value =>
+                `${((MAX_SPEED + MIN_SPEED - value) / 1000).toFixed(1)} s`
               }
-            >
-              Start
-            </Button>
-          ) : (
-            <Button
-              variant="outlined"
-              color="primary"
-              onClick={onPause}
-              startIcon={paused ? <PlayArrow /> : <PauseIcon />}
-            >
-              {paused ? 'Continue' : 'Pause'}
-            </Button>
-          )}
+              marks
+              disabled={!paused || starting}
+              value={MAX_SPEED + MIN_SPEED - simulationSpeed}
+              onChange={(event, newValue) =>
+                setSimulationSpeed(MAX_SPEED + MIN_SPEED - newValue)
+              }
+              step={100}
+              min={MAX_SPEED}
+              max={MIN_SPEED}
+            />
+          </Box>
+
+          <Box ml={4}>
+            {!started ? (
+              <Button
+                variant="outlined"
+                color="primary"
+                onClick={onStart}
+                disabled={starting}
+                startIcon={
+                  starting && <CircularProgress size={24} color="inherit" />
+                }
+              >
+                Start
+              </Button>
+            ) : (
+              <Button
+                variant="outlined"
+                color="primary"
+                onClick={onPause}
+                startIcon={paused ? <PlayArrow /> : <PauseIcon />}
+              >
+                {paused ? 'Continue' : 'Pause'}
+              </Button>
+            )}
+          </Box>
         </Grid>
       </Grid>
 
-      <Grid container spacing={3}>
+      <Grid container spacing={1} style={{ marginTop: theme.spacing(2) }}>
         <Grid item lg={3} sm={6} xs={12}>
           <Card className={clsx(classes.cardRoot)}>
             <Box flexGrow={1}>
@@ -278,11 +322,11 @@ const DashboardView = ({
                 <Typography variant="h3" color="textPrimary">
                   {assetHeld > 0.5
                     ? numeral(assetHeld).format('0,0.00')
-                    : numeral(0).format('0,0.00')}{' '}
+                    : numeral(10000.123).format('0,0.00')}{' '}
                   (
                   {assetHeld > 0.5
                     ? numeral(assetHeld * currentPrice).format('$0,0.00')
-                    : numeral(0).format('0,0.00')}
+                    : numeral(10000.123).format('0,0.00$')}
                   )
                 </Typography>
               </Box>
@@ -328,7 +372,7 @@ const DashboardView = ({
             <Divider />
             <CardContent>
               <PerfectScrollbar>
-                <Box height={375} minWidth={500}>
+                <Box height={500} minWidth={500}>
                   <PriceChart
                     className={classes.chart}
                     data={{
@@ -361,6 +405,31 @@ const DashboardView = ({
                     data={{ values: networths, labels: labels }}
                     // data={FAKE_DATA}
                     label={'Networth over time'}
+                    color={theme.palette.error.main}
+                  />
+                </Box>
+              </PerfectScrollbar>
+            </CardContent>
+          </Card>
+        </Grid>
+        <Grid item xs={12} lg={6}>
+          <Card>
+            <CardHeader title="Asset/Balance ratio" />
+            <Divider />
+            <CardContent>
+              <PerfectScrollbar>
+                <Box height={375} minWidth={500}>
+                  <AssetBalanceChart
+                    className={classes.chart}
+                    // data={{
+                    //   values: {
+                    //     assetsHeld: FAKE_DATA.values.slice(0, 10),
+                    //     balances: FAKE_DATA.values.slice(0, 10)
+                    //   },
+                    //   labels: FAKE_DATA.labels
+                    // }}
+                    data={{ values: { assetsHeld, balances }, labels: labels }}
+                    label={'Asset/Balance ratio'}
                     color={theme.palette.error.main}
                   />
                 </Box>
