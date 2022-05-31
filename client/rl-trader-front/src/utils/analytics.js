@@ -10,7 +10,7 @@ const track = (...args) => {
   window.gtag(...args);
 };
 
-const pageview = (props) => {
+const pageview = props => {
   track('config', process.env.REACT_APP_GA_MEASUREMENT_ID, props);
 };
 

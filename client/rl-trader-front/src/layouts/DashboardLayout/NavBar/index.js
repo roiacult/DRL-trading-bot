@@ -1,6 +1,6 @@
 /* eslint-disable no-use-before-define */
 import React, { useEffect, useState } from 'react';
-import { useLocation, matchPath, Link as RouterLink } from 'react-router-dom';
+import { useLocation, matchPath } from 'react-router-dom';
 import PerfectScrollbar from 'react-perfect-scrollbar';
 import PropTypes from 'prop-types';
 import {
@@ -183,13 +183,11 @@ const NavBar = ({ openMobile }) => {
         </Hidden> */}
         <Box p={2}>
           <Box display="flex" justifyContent="center">
-            <RouterLink to="/app/account">
-              <Avatar
-                alt="logo"
-                className={classes.avatar}
-                src="/static/logo.png"
-              />
-            </RouterLink>
+            <Avatar
+              alt="logo"
+              className={classes.avatar}
+              src="/static/logo.png"
+            />
           </Box>
           <Box mt={2} textAlign="center">
             <Typography variant="h5" color="textPrimary">

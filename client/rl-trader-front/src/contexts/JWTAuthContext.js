@@ -1,8 +1,4 @@
-import React, {
-  createContext,
-  useEffect,
-  useReducer
-} from 'react';
+import React, { createContext, useEffect, useReducer } from 'react';
 import jwtDecode from 'jwt-decode';
 import SplashScreen from 'src/components/SplashScreen';
 import axios from 'src/utils/axios';
@@ -13,7 +9,7 @@ const initialAuthState = {
   user: null
 };
 
-const isValidToken = (accessToken) => {
+const isValidToken = accessToken => {
   if (!accessToken) {
     return false;
   }
@@ -24,7 +20,7 @@ const isValidToken = (accessToken) => {
   return decoded.exp > currentTime;
 };
 
-const setSession = (accessToken) => {
+const setSession = accessToken => {
   if (accessToken) {
     localStorage.setItem('accessToken', accessToken);
     axios.defaults.headers.common.Authorization = `Bearer ${accessToken}`;
@@ -81,7 +77,7 @@ const AuthContext = createContext({
   ...initialAuthState,
   method: 'JWT',
   login: () => Promise.resolve(),
-  logout: () => { },
+  logout: () => {},
   register: () => Promise.resolve()
 });
 
@@ -89,7 +85,10 @@ export const AuthProvider = ({ children }) => {
   const [state, dispatch] = useReducer(reducer, initialAuthState);
 
   const login = async (email, password) => {
-    const response = await axios.post('/api/account/login', { email, password });
+    const response = await axios.post('/api/account/login', {
+      email,
+      password
+    });
     const { accessToken, user } = response.data;
 
     setSession(accessToken);

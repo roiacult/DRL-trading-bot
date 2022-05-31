@@ -226,7 +226,7 @@ const DashboardView = ({
         </Grid>
         <Grid item className={classes.controllerContainer}>
           <Box>
-            <Typography id="discrete-slider" gutterBottom>
+            <Typography id="discrete-slider" color="textPrimary" gutterBottom>
               Simulation speed
             </Typography>
 

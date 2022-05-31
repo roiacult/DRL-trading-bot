@@ -7,14 +7,10 @@ const GuestGuard = ({ children }) => {
   const { isAuthenticated } = useAuth();
 
   if (isAuthenticated) {
-    return <Redirect to="/app/account" />;
+    return <Redirect to="/app" />;
   }
 
-  return (
-    <>
-      {children}
-    </>
-  );
+  return <>{children}</>;
 };
 
 GuestGuard.propTypes = {
