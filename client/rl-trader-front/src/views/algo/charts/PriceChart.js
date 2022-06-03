@@ -6,7 +6,7 @@ import { fade, makeStyles, useTheme } from '@material-ui/core';
 import numeral from 'numeral';
 import moment from 'moment';
 
-const PRICES_TO_SHOW = 10;
+const PRICES_TO_SHOW = 20;
 
 const useStyles = makeStyles(() => ({
   root: {
@@ -98,10 +98,11 @@ const PriceChart = ({ className, data: dataProp, label, color, ...rest }) => {
             padding: 20,
             fontColor: theme.palette.text.secondary,
             callback: (value, index, values) => {
-              const step = parseInt(values.length / PRICES_TO_SHOW);
+              const step = parseInt(values.length / PRICES_TO_SHOW) + 1;
               if (index % step === 0) {
                 return moment(value).format('YYYY-MM-DD, h:mm a');
               }
+              // return moment(value).format('YYYY-MM-DD, h:mm a');
             }
           }
         }

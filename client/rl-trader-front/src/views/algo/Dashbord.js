@@ -278,7 +278,7 @@ const DashboardView = ({
       </Grid>
 
       <Grid container spacing={1} style={{ marginTop: theme.spacing(2) }}>
-        <Grid item lg={3} sm={6} xs={12}>
+        <Grid item lg={4} sm={6} xs={12}>
           <Card className={clsx(classes.cardRoot)}>
             <Box flexGrow={1}>
               <Typography
@@ -307,7 +307,7 @@ const DashboardView = ({
             </Avatar>
           </Card>
         </Grid>
-        <Grid item lg={3} sm={6} xs={12}>
+        <Grid item lg={4} sm={6} xs={12}>
           <Card className={clsx(classes.cardRoot)}>
             <Box flexGrow={1}>
               <Typography
@@ -336,7 +336,7 @@ const DashboardView = ({
             {/* </Avatar> */}
           </Card>
         </Grid>
-        <Grid item lg={3} sm={6} xs={12}>
+        <Grid item lg={4} sm={6} xs={12}>
           <Card className={clsx(classes.cardRoot)}>
             <Box flexGrow={1}>
               <Typography
