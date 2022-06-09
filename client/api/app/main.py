@@ -51,14 +51,9 @@ async def auth(request: Request, call_next):
     if path in WHITELIST_ROUTES:
         return response
     request_key = request.headers.get("Authorization", None)
-    print(f'\n\nheaders => {request.headers}', flush=True)
-    print(f'request_key => {request_key}\n\n', flush=True)
-
     if request_key:
         request_key = request_key.split(" ")[1]
         hashed_key = hashlib.sha256(KEY.encode()).hexdigest()
-        print(f'\n\ncorrect key => {hashed_key}', flush=True)
-        print(f'check => {request_key == hashed_key}\n\n', flush=True)
         if hashed_key == request_key:
             return response
 
@@ -76,9 +71,6 @@ async def auth(request: Request):
     body = await request.json()
     key = body.get("key", None)
 
-    print(f'\n\nprovided key => {key}\n\n', flush=True)
-    print(f'\n\ncorrect key => {KEY}\n\n', flush=True)
-    print(f'\n\ncheck => {KEY == key}\n\n', flush=True)
     if key:
         # Preparing key stored on server
         if KEY == key:
@@ -126,7 +118,6 @@ async def websocket_endpoint(websocket: WebSocket):
         assets_held = [asset_held * current_price]
         balances = [balance]
         label = np.datetime_as_string(df['Date'].values[current_step], unit='m')
-        # print(f'started {benchmarks}', flush=True)
         await websocket.send_json({
             'status': 'sucess',
             'action': 'start',
