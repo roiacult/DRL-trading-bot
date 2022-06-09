@@ -8,7 +8,6 @@ const API = Axios.create({
 
 API.interceptors.request.use(config => {
   const accessToken = window.localStorage.getItem('accessToken');
-  console.log('accessToken => ', accessToken);
   if (accessToken) config.headers.Authorization = `token ${accessToken}`;
   config.headers['Content-Type'] = 'application/json';
   return config;
