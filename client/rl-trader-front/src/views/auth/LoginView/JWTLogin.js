@@ -25,23 +25,18 @@ const JWTLogin = ({ className, ...rest }) => {
   return (
     <Formik
       initialValues={{
-        email: 'demo@devias.io',
-        password: 'Password123',
+        key: '',
         submit: null
       }}
       validationSchema={Yup.object().shape({
-        email: Yup.string()
-          .email('Must be a valid email')
+        key: Yup.string()
           .max(255)
-          .required('Email is required'),
-        password: Yup.string()
-          .max(255)
-          .required('Password is required')
+          .required('Authentification Key is required')
       })}
       onSubmit={async (values, { setErrors, setStatus, setSubmitting }) => {
         try {
           // add login request here
-          await login(values.email, values.password);
+          await login(values.key);
 
           if (isMountedRef.current) {
             setStatus({ success: true });
@@ -73,30 +68,18 @@ const JWTLogin = ({ className, ...rest }) => {
           {...rest}
         >
           <TextField
-            error={Boolean(touched.email && errors.email)}
+            error={Boolean(touched.key && errors.key)}
             fullWidth
+            // eslint-disable-next-line jsx-a11y/no-autofocus
             autoFocus
-            helperText={touched.email && errors.email}
-            label="Email Address"
+            helperText={touched.key && errors.key}
+            label="Authentification Key"
             margin="normal"
-            name="email"
+            name="key"
             onBlur={handleBlur}
             onChange={handleChange}
-            type="email"
-            value={values.email}
-            variant="outlined"
-          />
-          <TextField
-            error={Boolean(touched.password && errors.password)}
-            fullWidth
-            helperText={touched.password && errors.password}
-            label="Password"
-            margin="normal"
-            name="password"
-            onBlur={handleBlur}
-            onChange={handleChange}
-            type="password"
-            value={values.password}
+            type="text"
+            value={values.key}
             variant="outlined"
           />
           {errors.submit && (
@@ -113,7 +96,7 @@ const JWTLogin = ({ className, ...rest }) => {
               type="submit"
               variant="contained"
             >
-              Log In
+              Authentificate
             </Button>
           </Box>
         </form>

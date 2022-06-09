@@ -1,9 +1,11 @@
+import hashlib
 import pathlib
 
 import numpy as np
-from fastapi import FastAPI
+from fastapi import FastAPI, Request, status, HTTPException
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.websockets import WebSocket
+from fastapi.responses import JSONResponse
 import os
 from stat import *
 
@@ -18,10 +20,14 @@ BLACKLIST_FILES = ['params', 'progress', 'result', 'event', 'experiment', 'error
 LOOKBACK_WINDOW = 40
 ASSET_BALANCE_WINDOW = 10
 
+KEY = "1a46f2b7-b2e5-4bfd-a806-5c35c9368aa3"
+
+WHITELIST_ROUTES = ["/api/auth", ]
+
 
 # fast api functions
 def get_application():
-    _app = FastAPI(title="raspApi")
+    _app = FastAPI(title="RLTraderApi")
 
     _app.add_middleware(
         CORSMiddleware,
@@ -35,6 +41,53 @@ def get_application():
 
 
 app = get_application()
+
+
+@app.middleware("http")
+async def auth(request: Request, call_next):
+    response = await call_next(request)
+    path = request.scope.get("path")
+    # Verify if the route is whitelisted from middelware
+    if path in WHITELIST_ROUTES:
+        return response
+    request_key = request.headers.get("Authorization", None)
+    print(f'\n\nheaders => {request.headers}', flush=True)
+    print(f'request_key => {request_key}\n\n', flush=True)
+
+    if request_key:
+        request_key = request_key.split(" ")[1]
+        hashed_key = hashlib.sha256(KEY.encode()).hexdigest()
+        print(f'\n\ncorrect key => {hashed_key}', flush=True)
+        print(f'check => {request_key == hashed_key}\n\n', flush=True)
+        if hashed_key == request_key:
+            return response
+
+    # return None
+    return JSONResponse(
+        status_code=status.HTTP_401_UNAUTHORIZED,
+        content={"details": "UNAUTHORIZED"},
+        headers={"Access-Control-Allow-Origin": "*"}
+    )
+
+
+@app.post("/api/auth")
+async def auth(request: Request):
+    # Parse request body
+    body = await request.json()
+    key = body.get("key", None)
+
+    print(f'\n\nprovided key => {key}\n\n', flush=True)
+    print(f'\n\ncorrect key => {KEY}\n\n', flush=True)
+    print(f'\n\ncheck => {KEY == key}\n\n', flush=True)
+    if key:
+        # Preparing key stored on server
+        if KEY == key:
+            hashed_key = hashlib.sha256(KEY.encode()).hexdigest()
+            return {"accessToken": hashed_key}
+        else:
+            raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="Creds provided are incorrect")
+    else:
+        raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="Creds provided are incorrect")
 
 
 @app.websocket("/api/deploy_ws")
@@ -70,7 +123,7 @@ async def websocket_endpoint(websocket: WebSocket):
 
         current_step, net_worths, benchmarks, trades, balance, asset_held = ray_deployment.start()
         current_price = float(df.iloc[current_step]['Close'])
-        assets_held = [asset_held*current_price]
+        assets_held = [asset_held * current_price]
         balances = [balance]
         label = np.datetime_as_string(df['Date'].values[current_step], unit='m')
         # print(f'started {benchmarks}', flush=True)
@@ -94,7 +147,7 @@ async def websocket_endpoint(websocket: WebSocket):
 
                 current_price = float(df.iloc[current_step]['Close'])
 
-                assets_held.append(asset_held*current_price)
+                assets_held.append(asset_held * current_price)
                 balances.append(balance)
 
                 prices_period = message.get('price_period', LOOKBACK_WINDOW)

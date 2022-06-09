@@ -1,23 +1,12 @@
 import React, { createContext, useEffect, useReducer } from 'react';
-import jwtDecode from 'jwt-decode';
+import API from 'src/Api';
+// import jwtDecode from 'jwt-decode';
 import SplashScreen from 'src/components/SplashScreen';
 import axios from 'src/utils/axios';
 
 const initialAuthState = {
   isAuthenticated: false,
-  isInitialised: false,
-  user: null
-};
-
-const isValidToken = accessToken => {
-  if (!accessToken) {
-    return false;
-  }
-
-  const decoded = jwtDecode(accessToken);
-  const currentTime = Date.now() / 1000;
-
-  return decoded.exp > currentTime;
+  isInitialised: false
 };
 
 const setSession = accessToken => {
@@ -33,38 +22,30 @@ const setSession = accessToken => {
 const reducer = (state, action) => {
   switch (action.type) {
     case 'INITIALISE': {
-      const { isAuthenticated, user } = action.payload;
+      const { isAuthenticated } = action.payload;
 
       return {
         ...state,
         isAuthenticated,
-        isInitialised: true,
-        user
+        isInitialised: true
       };
     }
     case 'LOGIN': {
-      const { user } = action.payload;
-
       return {
         ...state,
-        isAuthenticated: true,
-        user
+        isAuthenticated: true
       };
     }
     case 'LOGOUT': {
       return {
         ...state,
-        isAuthenticated: false,
-        user: null
+        isAuthenticated: false
       };
     }
     case 'REGISTER': {
-      const { user } = action.payload;
-
       return {
         ...state,
-        isAuthenticated: true,
-        user
+        isAuthenticated: true
       };
     }
     default: {
@@ -84,19 +65,14 @@ const AuthContext = createContext({
 export const AuthProvider = ({ children }) => {
   const [state, dispatch] = useReducer(reducer, initialAuthState);
 
-  const login = async (email, password) => {
-    const response = await axios.post('/api/account/login', {
-      email,
-      password
-    });
-    const { accessToken, user } = response.data;
+  const login = async key => {
+    const response = await API.post('/api/auth', { key: key });
+    const { accessToken } = response.data;
 
     setSession(accessToken);
     dispatch({
       type: 'LOGIN',
-      payload: {
-        user
-      }
+      payload: {}
     });
   };
 
@@ -128,25 +104,19 @@ export const AuthProvider = ({ children }) => {
       try {
         const accessToken = window.localStorage.getItem('accessToken');
 
-        if (accessToken && isValidToken(accessToken)) {
+        if (accessToken) {
           setSession(accessToken);
-
-          const response = await axios.get('/api/account/me');
-          const { user } = response.data;
-
           dispatch({
             type: 'INITIALISE',
             payload: {
-              isAuthenticated: true,
-              user
+              isAuthenticated: true
             }
           });
         } else {
           dispatch({
             type: 'INITIALISE',
             payload: {
-              isAuthenticated: false,
-              user: null
+              isAuthenticated: false
             }
           });
         }
@@ -155,8 +125,7 @@ export const AuthProvider = ({ children }) => {
         dispatch({
           type: 'INITIALISE',
           payload: {
-            isAuthenticated: false,
-            user: null
+            isAuthenticated: false
           }
         });
       }
