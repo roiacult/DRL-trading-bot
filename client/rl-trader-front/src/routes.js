@@ -6,36 +6,38 @@ import AuthGuard from 'src/components/AuthGuard';
 import GuestGuard from 'src/components/GuestGuard';
 import { Redirect } from 'react-router-dom';
 
-export const renderRoutes = (routes = []) => (
-  <Suspense fallback={<LoadingScreen />}>
-    <Switch>
-      {routes.map((route, i) => {
-        const Guard = route.guard || Fragment;
-        const Layout = route.layout || Fragment;
-        const Component = route.component;
+export const renderRoutes = (routes = []) => {
+  return (
+    <Suspense fallback={<LoadingScreen />}>
+      <Switch>
+        {routes.map((route, i) => {
+          const Guard = route.guard || Fragment;
+          const Layout = route.layout || Fragment;
+          const Component = route.component;
 
-        return (
-          <Route
-            key={i}
-            path={route.path}
-            exact={route.exact}
-            render={props => (
-              <Guard>
-                <Layout>
-                  {route.routes ? (
-                    renderRoutes(route.routes)
-                  ) : (
-                    <Component {...props} />
-                  )}
-                </Layout>
-              </Guard>
-            )}
-          />
-        );
-      })}
-    </Switch>
-  </Suspense>
-);
+          return (
+            <Route
+              key={i}
+              path={route.path}
+              exact={route.exact}
+              render={props => (
+                <Guard>
+                  <Layout>
+                    {route.routes ? (
+                      renderRoutes(route.routes)
+                    ) : (
+                      <Component {...props} />
+                    )}
+                  </Layout>
+                </Guard>
+              )}
+            />
+          );
+        })}
+      </Switch>
+    </Suspense>
+  );
+};
 
 const routes = [
   {
@@ -56,7 +58,7 @@ const routes = [
     routes: [
       // add /app routes here
       {
-        exact: true,
+        exact: false,
         path: '/app/algo/:algo/:reward/:expirement/:checkpoint',
         component: lazy(() => import('src/views/algo'))
       }

@@ -57,12 +57,12 @@ async def auth(request: Request, call_next):
         if hashed_key == request_key:
             return response
 
-    # return None
-    return JSONResponse(
-        status_code=status.HTTP_401_UNAUTHORIZED,
-        content={"details": "UNAUTHORIZED"},
-        headers={"Access-Control-Allow-Origin": "*"}
-    )
+    return response
+    # return JSONResponse(
+    #     status_code=status.HTTP_401_UNAUTHORIZED,
+    #     content={"details": "UNAUTHORIZED"},
+    #     headers={"Access-Control-Allow-Origin": "*"}
+    # )
 
 
 @app.post("/api/auth")

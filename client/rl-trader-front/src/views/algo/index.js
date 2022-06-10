@@ -1,165 +1,43 @@
-import React, { useCallback, useEffect, useState } from 'react';
-import { Box, Container, makeStyles } from '@material-ui/core';
-import Page from 'src/components/Page';
-import Stats from './Stats';
-import Header from './Header';
-import { SOCKET_URL } from 'src/constants';
-import DashboardView from './Dashbord';
-import useWebSocket, { ReadyState } from 'react-use-websocket';
+import { CircularProgress } from '@material-ui/core';
+import React, { useEffect, useState } from 'react';
+import AlgoView from './AlgoView';
 
-const useStyles = makeStyles(theme => ({
-  root: {
-    backgroundColor: theme.palette.background.dark,
-    paddingTop: theme.spacing(3),
-    paddingBottom: theme.spacing(3)
-  }
-}));
-
-const WAIT_TIME = 1000;
-
-const AlgoView = ({
+const AlgoPage = ({
   match: {
     params: { algo, reward, expirement, checkpoint }
   }
 }) => {
-  const classes = useStyles();
-  const [loading, setLoading] = useState(false);
-  const [socket, setSocket] = useState(null);
-  const [data, setData] = useState(null);
-  const [deployed, setDeployed] = useState(false);
-  const [starting, setStarting] = useState(false);
-  const [started, setStarted] = useState(false);
-  const [paused, setPaused] = useState(false);
-  const [simulationSpeed, setSimulationSpeed] = useState(WAIT_TIME);
+  const [refresh, setRefresh] = useState(true);
 
-  const [pricesPeriod, setPricesPeriod] = useState(48);
-
-  const {
-    // sendMessage,
-    sendJsonMessage,
-    lastMessage,
-    readyState
-    //  readyState
-  } = useWebSocket(socket);
-
-  // console.log('last message =>', lastMessage);
-
-  const sendNextRequest = () => {
-    // console.log('sending next request', socket != null);
-    sendJsonMessage({
-      next: true,
-      price_period: pricesPeriod
-    });
-  };
-
-  const sendStartRequest = () => {
-    // console.log('sending next request', socket != null);
-    sendJsonMessage({
-      start: true,
-      price_period: pricesPeriod
-    });
-    setStarting(true);
-  };
+  const delay = ms => new Promise(resolve => setTimeout(resolve, ms));
 
   useEffect(() => {
-    // console.log('last message =>', lastMessage);
+    setRefresh(true);
+  }, [algo, reward, expirement, checkpoint]);
 
-    if (lastMessage) {
-      const data = JSON.parse(lastMessage.data);
-      switch (data.action) {
-        case 'deploy':
-          // console.log('recived deployed');
-          setLoading(false);
-          setDeployed(true);
-          break;
-        case 'start':
-          // console.log('recived started', data);
-          setData(data);
-          setStarting(false);
-          setStarted(true);
-          sendNextRequest();
-          break;
-        case 'next':
-          console.log('recived next', data);
-          setData(data);
-          if (!paused) setTimeout(sendNextRequest, simulationSpeed);
-          break;
-        default:
-          break;
-      }
-    }
-  }, [lastMessage]);
-
-  useEffect(() => {
-    if (readyState === ReadyState.CONNECTING) {
-      sendJsonMessage({
-        deploy: true,
-        algo,
-        reward,
-        expirement,
-        checkpoint
-      });
-    }
-  }, [readyState]);
-
-  // console.log('data => ', data);
-
-  const startSocket = useCallback(() => {
-    setSocket(SOCKET_URL + '/api/deploy_ws');
-  }, []);
-
-  const deploy = () => {
-    setLoading(true);
-    startSocket();
+  const updateState = async () => {
+    await delay(100);
+    setRefresh(false);
   };
+
+  if (refresh) updateState();
+
+  console.log('refresh => ', refresh);
 
   return (
-    <Page className={classes.root} title={expirement}>
-      {!deployed ? (
-        <Container maxWidth="lg">
-          <Header
-            expirement={expirement}
-            checkpoint={checkpoint}
-            onDeploy={deploy}
-            deploying={loading}
-          />
-          <Box mt={3}>
-            <Stats
-              expirement={expirement}
-              checkpoint={checkpoint}
-              algo={algo}
-              reward={reward}
-            />
-          </Box>
-        </Container>
-      ) : (
-        <DashboardView
-          expirement={expirement}
-          checkpoint={checkpoint}
+    <>
+      {!refresh ? (
+        <AlgoView
           algo={algo}
           reward={reward}
-          onStart={sendStartRequest}
-          onPause={() => {
-            setPaused(!paused);
-            sendNextRequest();
-          }}
-          started={started}
-          starting={starting}
-          paused={paused}
-          simulationSpeed={simulationSpeed}
-          setSimulationSpeed={setSimulationSpeed}
-          networths={data ? data.net_worth : []}
-          labels={data ? data.labels : []}
-          assetsHeld={data ? data.assets_held : []}
-          balances={data ? data.balances : []}
-          prices={data ? data.prices : []}
-          trades={data ? data.trades : []}
-          windowStart={data ? data.window_start : 0}
-          setPricesPeriod={setPricesPeriod}
+          expirement={expirement}
+          checkpoint={checkpoint}
         />
+      ) : (
+        <CircularProgress />
       )}
-    </Page>
+    </>
   );
 };
 
-export default AlgoView;
+export default AlgoPage;
