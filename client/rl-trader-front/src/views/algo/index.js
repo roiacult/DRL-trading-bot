@@ -1,6 +1,7 @@
 import { CircularProgress } from '@material-ui/core';
 import React, { useEffect, useState } from 'react';
-import AlgoView from './AlgoView';
+// import AlgoView from './AlgoView';
+import AlgoView from 'src/views/algo/AlgoView';
 
 const AlgoPage = ({
   match: {
