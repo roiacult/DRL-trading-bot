@@ -1,9 +1,9 @@
 import React, { useEffect } from 'react';
-import AlgoView from './AlgoView';
 import { CircularProgress } from '@material-ui/core';
 import { useState } from 'react';
+import AlgoView from './AlgoView';
 
-const AlgoPage = ({
+export const AlgoPage = ({
   match: {
     params: { algo, reward, expirement, checkpoint }
   }
