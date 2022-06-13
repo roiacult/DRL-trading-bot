@@ -1,7 +1,7 @@
 import React, { useEffect } from 'react';
 import { CircularProgress } from '@material-ui/core';
 import { useState } from 'react';
-import AlgoView from './AlgoView';
+import Algo from 'src/views/algo/AlgoView';
 
 export const AlgoPage = ({
   match: {
@@ -28,7 +28,7 @@ export const AlgoPage = ({
   return (
     <>
       {!refresh ? (
-        <AlgoView
+        <Algo
           algo={algo}
           reward={reward}
           expirement={expirement}
