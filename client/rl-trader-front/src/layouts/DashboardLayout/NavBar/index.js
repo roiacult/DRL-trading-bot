@@ -19,6 +19,7 @@ import { Layers as LayersIcon } from 'react-feather';
 import API from 'src/Api';
 import NavItem from './NavItem';
 import { coinIcon } from '../../../assets/icons';
+import { useHistory } from 'react-router-dom';
 
 function renderNavItems({ items, pathname, depth = 0 }) {
   return (
@@ -154,6 +155,7 @@ const NavBar = ({ openMobile }) => {
   const [items, setItems] = useState(null);
   const [failure, setFailure] = useState({});
   const [loading, setLoading] = useState(true);
+  const history = useHistory();
 
   useEffect(() => {
     fetchModels();
@@ -171,16 +173,16 @@ const NavBar = ({ openMobile }) => {
     }
   };
 
+  useEffect(() => {
+    if (items && items.length > 0) {
+      const link = items[0].items[0].items[0].href;
+      history.push(link);
+    }
+  }, [items]);
+
   const content = (
     <Box height="100%" display="flex" flexDirection="column" pt={8}>
       <PerfectScrollbar options={{ suppressScrollX: true }}>
-        {/* <Hidden lgUp>
-          <Box p={2} display="flex" justifyContent="center">
-            <RouterLink to="/">
-              <Logo />
-            </RouterLink>
-          </Box>
-        </Hidden> */}
         <Box p={2}>
           <Box display="flex" justifyContent="center">
             <Avatar
