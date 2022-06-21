@@ -20,7 +20,7 @@ BLACKLIST_FILES = ['params', 'progress', 'result', 'event', 'experiment', 'error
 LOOKBACK_WINDOW = 40
 ASSET_BALANCE_WINDOW = 10
 
-KEY = "1a46f2b7-b2e5-4bfd-a806-5c35c9368aa3"
+KEY = "esisba-swissdigilab-2022"
 
 WHITELIST_ROUTES = ["/api/auth", ]
 
