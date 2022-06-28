@@ -65,7 +65,7 @@ class RayOptimizer:
             # "lr": LEARNING_RATE,  # Hyperparameter grid search defined above
             # This can have a big impact on the result and needs to be properly tuned (range is 0 to 1)
             # "gamma": 0.50,
-            "observation_filter": "MeanStdFilter",  # normalizing observation space
+            "observation_filter": "ConcurrentMeanStdFilter",  # normalizing observation space
             "model": self.model_conf,
             # "sgd_minibatch_size": MINIBATCH_SIZE,  # Hyperparameter grid search defined above
             "evaluation_interval": 2,  # Run evaluation on every iteration
@@ -81,11 +81,11 @@ class RayOptimizer:
             "env_config": self.env_test_config,
             "log_level": "WARNING",
             "framework": "torch",
-            "num_workers": 0,
+            "num_workers": 2,
             "evaluation_num_workers": 1,
             "in_evaluation": True,
             "clip_rewards": True,
-            "observation_filter": "MeanStdFilter",
+            "observation_filter": "ConcurrentMeanStdFilter",
             "model": self.model_conf,
             "evaluation_config": {
                 "mode": "test"
