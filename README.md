@@ -58,3 +58,24 @@ Python script to fetch the dataset from the Binance Exchange.
 * **--episodes**: Number of episodes to test on.
 * **-ns**: List checkpoints we want to test.
 * **--render**: This flag trigger environment rendering.
+
+
+## Backtesting platform
+To deploy production version
+
+```bash
+cd client && docker-compose up --build
+```
+
+To deploy development version
+
+```bash
+cd client
+
+# run api
+docker-compose -f docker-compose-dev.yml up --build
+
+# run front 
+cd rl-trader-front 
+yarn && yarn start
+```
